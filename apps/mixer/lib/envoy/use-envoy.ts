@@ -68,7 +68,11 @@ export function useEnvoy(as: string | null, frame: React.RefObject<HTMLIFrameEle
         const c = s.convs[e.convId]; if (c) post({ type: "envoy:edge", convId: c.convId, askId: c.askId, alias: c.alias, state: edgeState(c, Object.values(s.matches)) });
       }
       if (fresh && (e.type === "conv.message" || e.type === "conv.withheld")) post({ type: "envoy:pulse", convId: e.convId, fromAsker: e.from === "Asker", withheld: e.type === "conv.withheld" });
-      if (e.type === "match.revealed" && e.asker && e.offerer) post({ type: "envoy:link", a: e.asker.id, b: e.offerer.id });
+      if (e.type === "match.revealed" && e.asker && e.offerer) {
+        post({ type: "envoy:link", a: e.asker.id, b: e.offerer.id });
+        // only the two parties get names, so only they see the envoys drop their masks
+        post({ type: "envoy:reveal", askId: e.askId, alias: e.alias, asker: e.asker.name, offerer: e.offerer.name });
+      }
       if (e.type === "karma.changed") { refreshBoard(); if (fresh && e.userId === as) setLastKarma({ delta: e.delta, at: Date.now() }); }
     };
     return () => { es.close(); setOnline(false); };

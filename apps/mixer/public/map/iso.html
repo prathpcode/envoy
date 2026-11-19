@@ -118,7 +118,8 @@ for (let z = zmin; z <= zmin + 1; z++) { const sh = zmax - z;
 // ---- the network: people stand at their dorm or affiliation; an ask is a ring of masked envoys at a neutral spot ----
 // The map only draws what the app posts to it. The app only knows what the relay let this viewer see, so a masked
 // envoy here carries no identity at all: same grey figure for everyone, a letter instead of a name, and a meeting
-// spot that has nothing to do with where its owner lives.
+// spot that has nothing to do with where its owner lives. The two exceptions are the ones the relay allows: your own
+// envoy wears your character, and after a reveal the two parties see each other's.
 const PLACES = {
   wilbur: [37.4243, -122.1630], stern: [37.4249, -122.1655], toyon: [37.4262, -122.1641], branner: [37.4255, -122.1622],
   crothers: [37.4263, -122.1657], flomo: [37.4226, -122.1716], roble: [37.4257, -122.1748], lagunita: [37.4250, -122.1764],
@@ -133,14 +134,24 @@ const nodes = new Map();      // userId -> person standing at home
 const asks = new Map();       // askId -> { spot:[x,y], envoys: Map(alias -> token) }
 const edges = new Map();      // convId -> { askId, alias, state, pulses: [] }
 const links = [];             // confirmed connections between two home nodes: [idA, idB]
-let selected = null;
+let selected = null, meName = null;
 
 function nearCapped(p, cap) { const q = nearestWalkable(p[0], p[1]); return Math.hypot(q[0] - p[0], q[1] - p[1]) <= cap ? q : p; }
 function token(name, x, y, t) {
   return { name, x, y, tx: x, ty: y, hx: x, hy: y, vx: 0, vy: 0, t, born: performance.now(), speed: 0.7 + rnd() * 0.3, pause: 1 + rnd() * 4,
     seed: rnd() * 10, cv: null, key: "", view: "front", flip: false, sx: 0, sy: 0 };
 }
+// an envoy wears a real character only when this viewer is allowed to know whose it is
+function dress(b) {
+  const name = b.revealed ?? (b.you ? meName : null);
+  b.t = name ? traits(name) : maskTraits(b.alias === "Asker"); b.key = "";
+}
+function envoy(alias, x, y, you, convId) {
+  const b = Object.assign(token(alias, x, y, null), { alias, you: !!you, masked: true, convId });
+  dress(b); return b;
+}
 function addNode(u) {
+  if (u.me && meName !== u.name) { meName = u.name; for (const a of asks.values()) for (const b of a.envoys.values()) if (b.you) dress(b); }
   if (nodes.has(u.id)) { Object.assign(nodes.get(u.id), { me: !!u.me, friend: !!u.friend }); return; }
   const home = PLACES[u.place] ?? SPOTS.quad, n = [...nodes.values()].filter((q) => q.place === u.place).length;
   const base = fromLatLon(home[0], home[1]), a = n * 2.4, r = n ? 40 + n * 16 : 0;     // housemates fan out instead of stacking
@@ -154,15 +165,15 @@ function addAsk(m) {
     // a re-scored ask: latecomers stand on a wider ring
     for (const cand of m.candidates ?? []) if (!had.envoys.has(cand.alias)) {
       const a = had.envoys.size * 1.9, x = had.c[0] + Math.cos(a) * 400, y = had.c[1] + Math.sin(a) * 250;
-      had.envoys.set(cand.alias, Object.assign(token(cand.alias, x, y, maskTraits(false)), { alias: cand.alias, you: !!cand.you, masked: true, convId: cand.convId }));
+      had.envoys.set(cand.alias, envoy(cand.alias, x, y, cand.you, cand.convId));
     }
     return;
   }
   const c = fromLatLon(...(SPOTS[m.spot] ?? SPOTS.quad)), envoys = new Map(), list = m.candidates ?? [];
-  envoys.set("Asker", Object.assign(token("Asker", c[0], c[1], maskTraits(true)), { alias: "Asker", you: !!m.mine, masked: true }));
+  envoys.set("Asker", envoy("Asker", c[0], c[1], m.mine));
   list.forEach((cand, i) => {
     const a = -Math.PI / 2 + (i / list.length) * 6.283, x = c[0] + Math.cos(a) * 270, y = c[1] + Math.sin(a) * 175;
-    envoys.set(cand.alias, Object.assign(token(cand.alias, x, y, maskTraits(false)), { alias: cand.alias, you: !!cand.you, masked: true, convId: cand.convId }));
+    envoys.set(cand.alias, envoy(cand.alias, x, y, cand.you, cand.convId));
   });
   asks.set(m.askId, { c, envoys }); dirty = true;
 }
@@ -234,8 +245,8 @@ function drawToken(b, now) {
   ctx.drawImage(b.cv, Math.round(X - dw / 2), Math.round(Y - dh * (1 - 2 / FOOT.h)), dw, dh);
   const top = Y - dh;
   if (b.masked) {
-    // the alias is all anyone gets: a letter on a paper chip
-    const label = b.alias === "Asker" ? (b.you ? "You" : "?") : b.you ? "You" : b.alias;
+    // the alias is all anyone gets: a letter on a paper chip, until a reveal puts a first name on it
+    const label = b.you ? "You" : b.revealed ? b.revealed.trim().split(/\s+/)[0] : b.alias === "Asker" ? "?" : b.alias;
     ctx.font = `800 ${14 * DPR}px "Bricolage Grotesque Variable", system-ui, sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     const tw = Math.max(22 * DPR, ctx.measureText(label).width + 12 * DPR), th = 22 * DPR;
     ctx.fillStyle = "#ffffff"; ctx.fillRect(Math.round(X - tw / 2) - u, top - th - u, tw + 2 * u, th + 2 * u);
@@ -282,12 +293,16 @@ addEventListener("message", (e) => {
   if (m.type === "envoy:edge") { const e0 = edges.get(m.convId); if (e0) e0.state = m.state; else edges.set(m.convId, { askId: m.askId, alias: m.alias, state: m.state, pulses: [] }); }
   if (m.type === "envoy:pulse") edges.get(m.convId)?.pulses.push({ at: performance.now(), fromAsker: m.fromAsker, withheld: m.withheld });
   if (m.type === "envoy:link") { if (!links.some(([a, b]) => a === m.a && b === m.b)) links.push([m.a, m.b]); for (const id of [m.a, m.b]) { const n = nodes.get(id); if (n && !n.me) n.friend = true; } }
+  if (m.type === "envoy:reveal") {
+    const a = asks.get(m.askId);
+    for (const [alias, name] of [["Asker", m.asker], [m.alias, m.offerer]]) { const b = a?.envoys.get(alias); if (b && name) { b.revealed = name; dress(b); } }
+  }
   if (m.type === "envoy:clearAsk") { asks.delete(m.askId); for (const [k, v] of edges) if (v.askId === m.askId) edges.delete(k); }
   if (m.type === "envoy:focus") {
     const n = m.id ? nodes.get(m.id) : null, a = m.askId ? asks.get(m.askId) : null;
     if (n) { selected = n.id; flyTo(n.x, n.y, 0.8); } else if (a) flyTo(a.c[0], a.c[1], 0.75);
   }
-  if (m.type === "envoy:reset") { nodes.clear(); asks.clear(); edges.clear(); links.length = 0; selected = null; }
+  if (m.type === "envoy:reset") { nodes.clear(); asks.clear(); edges.clear(); links.length = 0; selected = null; meName = null; }
 });
 
 // ---- interaction: drag pans, wheel or pinch zooms toward the cursor, a tap picks a bot ----
