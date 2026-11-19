@@ -17,7 +17,6 @@ export function KarmaSheet({ open, onOpenChange, board, me }: { open: boolean; o
       <SheetContent side="right" className="max-w-lg">
         <SheetHeader>
           <SheetTitle>Karma</SheetTitle>
-          <SheetDescription>Points come from meetings that happened. Nobody sees who asked for what.</SheetDescription>
         </SheetHeader>
         <Leaderboard blocks={10} entries={board.slice(0, 12).map((r) => ({ id: r.userId, name: r.userId === me ? `${r.name} (you)` : r.name, score: r.points, avatar: <CharAvatar name={r.name} cell={2} /> }))} />
       </SheetContent>
@@ -45,7 +44,7 @@ export function PersonSheet({ as, userId, user, points, known, onClose }: {
       <SheetContent side="right" className="max-w-lg" bodyClassName="flex flex-col gap-6">
         <SheetHeader>
           <SheetTitle>{own ? "Your card" : user?.name ?? "Card"}</SheetTitle>
-          <SheetDescription>{own ? "Offers only. Asks are never on a card." : data?.card?.affiliation ?? ""}</SheetDescription>
+          <SheetDescription>{own ? "" : data?.card?.affiliation ?? ""}</SheetDescription>
         </SheetHeader>
 
         {user && (
@@ -74,7 +73,6 @@ export function PersonSheet({ as, userId, user, points, known, onClose }: {
               ) : (
                 <div className="flex flex-wrap gap-3">{data.card.openTo.map((k, i) => <Badge key={k} tone="sky" tilt={i % 2 ? -1.5 : 1.5}>{KIND_LABEL[k] ?? k}</Badge>)}</div>
               )}
-              {own && <span className="text-base font-medium text-on-lid-soft">The scout never routes an ask to you outside this list.</span>}
             </div>
           </>
         )}
@@ -88,7 +86,6 @@ export function PersonSheet({ as, userId, user, points, known, onClose }: {
                 <Switch checked={r.share} onCheckedChange={(v: boolean) => save({ rules: rules.map((x) => (x.topic === r.topic ? { ...x, share: v } : x)) })} />
               </label>
             ))}
-            <span className="text-base font-medium text-on-lid-soft">Anything switched off shows up as a grey &ldquo;withheld&rdquo; line in the transcript. The text never leaves your bot.</span>
           </div>
         )}
       </SheetContent>
