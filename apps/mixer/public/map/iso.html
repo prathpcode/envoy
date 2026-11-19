@@ -127,13 +127,12 @@ const PLACES = {
   green: [37.4268, -122.1679],
 };
 const SPOTS = { quad: [37.4275, -122.1702], oval: [37.4297, -122.1694], whiteplaza: [37.4247, -122.1699], meyer: [37.4258, -122.1676], engquad: [37.4285, -122.1742] };
-const INK = { talking: "#36b8ff", fit: "#b6f23a", nofit: "#bfc4cc", matched: "#b6f23a", revealed: "#b6f23a", link: "#b6f23a" };
+const INK = { talking: "#36b8ff", fit: "#b6f23a", nofit: "#bfc4cc", matched: "#b6f23a", revealed: "#b6f23a" };
 function rng(seed) { let a = seed >>> 0; return () => ((a = (a * 1664525 + 1013904223) >>> 0) / 4294967296); }
 const rnd = rng(20261119);
 const nodes = new Map();      // userId -> person standing at home
 const asks = new Map();       // askId -> { spot:[x,y], envoys: Map(alias -> token) }
 const edges = new Map();      // convId -> { askId, alias, state, pulses: [] }
-const links = [];             // confirmed connections between two home nodes: [idA, idB]
 let selected = null, meName = null;
 
 function nearCapped(p, cap) { const q = nearestWalkable(p[0], p[1]); return Math.hypot(q[0] - p[0], q[1] - p[1]) <= cap ? q : p; }
@@ -206,7 +205,6 @@ function line(ax, ay, bx, by, color, dashOffset) {
 function ends(e) { const a = asks.get(e.askId); if (!a) return null; const p = a.envoys.get("Asker"), q = a.envoys.get(e.alias); return p && q ? [p, q] : null; }
 function drawEdges(now) {
   const mid = (b) => [Math.round(((b.x - cx) * s + VW / 2) * DPR), Math.round(((b.y - cy) * s + VH / 2 - 9 * cellCss()) * DPR)];
-  for (const [a, b] of links) { const p = nodes.get(a), q = nodes.get(b); if (p && q) line(...mid(p), ...mid(q), INK.link, null); }
   for (const e of edges.values()) {
     const pq = ends(e); if (!pq) continue;
     const [ax, ay] = mid(pq[0]), [bx, by] = mid(pq[1]); e.seg = [ax / DPR, ay / DPR, bx / DPR, by / DPR];
@@ -292,7 +290,8 @@ addEventListener("message", (e) => {
   if (m.type === "grokmate:ask") { addAsk(m); if (m.fly) flyTo(...asks.get(m.askId).c, 0.75); }
   if (m.type === "grokmate:edge") { const e0 = edges.get(m.convId); if (e0) e0.state = m.state; else if (asks.has(m.askId)) edges.set(m.convId, { askId: m.askId, alias: m.alias, state: m.state, pulses: [] }); }
   if (m.type === "grokmate:pulse") edges.get(m.convId)?.pulses.push({ at: performance.now(), fromAsker: m.fromAsker, withheld: m.withheld });
-  if (m.type === "grokmate:link") { if (!links.some(([a, b]) => a === m.a && b === m.b)) links.push([m.a, m.b]); for (const id of [m.a, m.b]) { const n = nodes.get(id); if (n && !n.me) n.friend = true; } }
+  if (m.type === "grokmate:link") { // a connection shows only as the lime underline under that person, never a line
+    for (const id of [m.a, m.b]) { const n = nodes.get(id); if (n && !n.me) n.friend = true; } }
   if (m.type === "grokmate:reveal") {
     const a = asks.get(m.askId);
     for (const [alias, name] of [["Asker", m.asker], [m.alias, m.offerer]]) { const b = a?.envoys.get(alias); if (b && name) { b.revealed = name; dress(b); } }
@@ -302,7 +301,7 @@ addEventListener("message", (e) => {
     const n = m.id ? nodes.get(m.id) : null, a = m.askId ? asks.get(m.askId) : null;
     if (n) { selected = n.id; flyTo(n.x, n.y, 0.8); } else if (a) flyTo(a.c[0], a.c[1], 0.75);
   }
-  if (m.type === "grokmate:reset") { nodes.clear(); asks.clear(); edges.clear(); links.length = 0; selected = null; meName = null; }
+  if (m.type === "grokmate:reset") { nodes.clear(); asks.clear(); edges.clear(); selected = null; meName = null; }
 });
 
 // ---- interaction: drag pans, wheel or pinch zooms toward the cursor, a tap picks a bot ----
