@@ -15,7 +15,7 @@ canvas{display:block;width:100vw;height:100vh;cursor:grab;touch-action:none}
 // Painted isometric campus: a pre-rendered tile pyramid (z6..z10, 512 px tiles, about 5 px per metre at z10) drawn on a
 // 2D canvas, with people standing on a walkable-ground mask derived from the painting itself.
 // World units are z10 pixels, origin at the top-left of the downloaded area. The camera faces east, so north is left.
-import { traits, maskTraits, drawChar, FOOT } from "./chars.js";
+import { traits, drawChar, FOOT } from "./chars.js";
 
 const P = new URLSearchParams(location.search);
 const EMBED = P.get("embed") === "1";
@@ -116,10 +116,10 @@ for (let z = zmin; z <= zmin + 1; z++) { const sh = zmax - z;
   for (let x = (C0 + fx) >> sh; x <= (C0 + NC - 1 + fx) >> sh; x++) for (let y = (R0 + fy) >> sh; y <= (R0 + NR - 1 + fy) >> sh; y++) tile(z, x, y); }
 
 // ---- the network: people stand at their dorm or affiliation; an ask is a ring of masked envoys at a neutral spot ----
-// The map only draws what the app posts to it. The app only knows what the relay let this viewer see, so a masked
-// envoy here carries no identity at all: same grey figure for everyone, a letter instead of a name, and a meeting
-// spot that has nothing to do with where its owner lives. The two exceptions are the ones the relay allows: your own
-// envoy wears your character, and after a reveal the two parties see each other's.
+// The map only draws what the app posts to it. The app only knows what the relay let this viewer see, so an unrevealed
+// envoy here carries no identity at all: a stand-in character made from its conversation id (never from its owner),
+// a letter instead of a name, and a meeting spot that has nothing to do with where its owner lives. The two exceptions
+// are the ones the relay allows: your own envoy wears your character, and after a reveal the two parties see each other's.
 const PLACES = {
   wilbur: [37.4243, -122.1630], stern: [37.4249, -122.1655], toyon: [37.4262, -122.1641], branner: [37.4255, -122.1622],
   crothers: [37.4263, -122.1657], flomo: [37.4226, -122.1716], roble: [37.4257, -122.1748], lagunita: [37.4250, -122.1764],
@@ -141,13 +141,13 @@ function token(name, x, y, t) {
   return { name, x, y, tx: x, ty: y, hx: x, hy: y, vx: 0, vy: 0, t, born: performance.now(), speed: 0.7 + rnd() * 0.3, pause: 1 + rnd() * 4,
     seed: rnd() * 10, cv: null, key: "", view: "front", flip: false, sx: 0, sy: 0 };
 }
-// an envoy wears a real character only when this viewer is allowed to know whose it is
+// an envoy wears a real character only when this viewer is allowed to know whose it is; otherwise a stand-in
 function dress(b) {
   const name = b.revealed ?? (b.you ? meName : null);
-  b.t = name ? traits(name) : maskTraits(b.alias === "Asker"); b.key = "";
+  b.t = traits(name ?? "envoy:" + b.standIn); b.key = "";
 }
-function envoy(alias, x, y, you, convId) {
-  const b = Object.assign(token(alias, x, y, null), { alias, you: !!you, masked: true, convId });
+function envoy(alias, x, y, you, convId, askId) {
+  const b = Object.assign(token(alias, x, y, null), { alias, you: !!you, masked: true, convId, standIn: convId ?? askId + ":" + alias });
   dress(b); return b;
 }
 function addNode(u) {
@@ -170,7 +170,7 @@ function addAsk(m) {
     return;
   }
   const c = fromLatLon(...(SPOTS[m.spot] ?? SPOTS.quad)), envoys = new Map(), list = m.candidates ?? [];
-  envoys.set("Asker", envoy("Asker", c[0], c[1], m.mine));
+  envoys.set("Asker", envoy("Asker", c[0], c[1], m.mine, undefined, m.askId));
   list.forEach((cand, i) => {
     const a = -Math.PI / 2 + (i / list.length) * 6.283, x = c[0] + Math.cos(a) * 270, y = c[1] + Math.sin(a) * 175;
     envoys.set(cand.alias, envoy(cand.alias, x, y, cand.you, cand.convId));
