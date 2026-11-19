@@ -1,0 +1,104 @@
+import { NextPage } from "@/components/mdx-parts";
+
+export const metadata = { title: "Installation" };
+
+<div className="prose-p3d intro-page">
+
+# Installation
+
+pixel3d-ui ships two ways. The **shadcn registry** copies component source into your project so you own it and can change it. The **npm package** is for when you just want to import and go. Pick one per project.
+
+## Option A: shadcn registry (recommended)
+
+### 1. Start from a Next.js + Tailwind v4 app
+
+```bash
+npx create-next-app@latest my-hack --ts --tailwind --app
+cd my-hack
+npx shadcn@latest init
+```
+
+### 2. Register the @pixel3d namespace
+
+Add the registry to `components.json`. Point it at wherever the pixel3d docs are hosted. Locally, that's the docs dev server.
+
+```json
+{
+  "registries": {
+    "@pixel3d": "http://localhost:3000/r/{name}.json"
+  }
+}
+```
+
+### 3. Add the material, then components
+
+The `pixel3d` item installs the sticker material (tokens, utilities, keyframes, the Bricolage Grotesque font) into your global CSS. Every component depends on it, so the CLI pulls it automatically. You can also add it on its own:
+
+```bash
+npx shadcn@latest add @pixel3d/pixel3d
+npx shadcn@latest add @pixel3d/button @pixel3d/input @pixel3d/dialog
+```
+
+Components land in `components/ui/`. Import them like any shadcn component:
+
+```tsx
+import { Button } from "@/components/ui/button";
+
+export default function Page() {
+  return <Button>Ship it</Button>;
+}
+```
+
+## Option B: npm
+
+```bash
+npm i @pixel3d/ui
+```
+
+Import the material once in your global CSS, right after Tailwind, and tell Tailwind to scan the package:
+
+```css
+@import "tailwindcss";
+@import "@pixel3d/ui/styles.css";
+@source "../node_modules/@pixel3d/ui/src";
+```
+
+```tsx
+import { Button, Input } from "@pixel3d/ui";
+import { Sticker3D, StickerCanvas } from "@pixel3d/ui/three";
+```
+
+In Next.js, add the package to `transpilePackages` in `next.config`:
+
+```js
+const nextConfig = { transpilePackages: ["@pixel3d/ui"] };
+```
+
+## Turning on 3D
+
+3D components draw on **one shared WebGL canvas**. Mount it once, high in your tree:
+
+```tsx
+// app/layout.tsx
+import { StickerCanvas } from "@/components/ui/three/sticker-canvas";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <StickerCanvas>{children}</StickerCanvas>
+      </body>
+    </html>
+  );
+}
+```
+
+Everything else stays the same: `<Sticker3D pattern="heart" />` works anywhere below it. Read [3D with three.js](/docs/three) for the details.
+
+## Dark mode
+
+The theme only changes the lid; stickers stay stickers. Put `class="dark"` on `<html>` (or use `next-themes` with `attribute="class"`).
+
+<NextPage href="/docs/principles" title="Design principles" />
+
+</div>

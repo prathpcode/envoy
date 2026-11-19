@@ -1,0 +1,29 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "toggle-group",
+  "title": "Toggle Group",
+  "description": "A row of toggle stickers for picking one or many; chosen ones go lime and lie flat.",
+  "dependencies": [
+    "radix-ui@1.8.1",
+    "class-variance-authority@0.7.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d",
+    "@pixel3d/toggle"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/toggle-group.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { ToggleGroup as ToggleGroupPrimitive } from \"radix-ui\";\nimport { type VariantProps } from \"class-variance-authority\";\nimport { cn, useTilt, type Tilt } from \"@/lib/pixel3d\";\nimport { toggleVariants } from \"@/components/ui/toggle\";\n\n/**\n * ToggleGroup — a row of Toggle stickers (single or multiple). Each pressed item turns lime,\n * lies flat and straightens. variant/size set on the group flow down to every item.\n */\nconst ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariants>>({\n  variant: \"default\",\n  size: \"default\",\n});\n\nexport const ToggleGroup = React.forwardRef<\n  React.ComponentRef<typeof ToggleGroupPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> & VariantProps<typeof toggleVariants>\n>(({ className, variant, size, children, ...props }, ref) => {\n  const ctx = React.useMemo(() => ({ variant, size }), [variant, size]);\n  return (\n    <ToggleGroupPrimitive.Root\n      ref={ref}\n      data-slot=\"toggle-group\"\n      data-variant={variant}\n      data-size={size}\n      className={cn(\"flex flex-wrap items-center gap-3 p-1\", className)}\n      {...props}\n    >\n      <ToggleGroupContext.Provider value={ctx}>{children}</ToggleGroupContext.Provider>\n    </ToggleGroupPrimitive.Root>\n  );\n});\nToggleGroup.displayName = \"ToggleGroup\";\n\nexport const ToggleGroupItem = React.forwardRef<\n  React.ComponentRef<typeof ToggleGroupPrimitive.Item>,\n  React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Item> &\n    VariantProps<typeof toggleVariants> & { tilt?: Tilt }\n>(({ className, variant, size, tilt = \"auto\", style, ...props }, ref) => {\n  const ctx = React.useContext(ToggleGroupContext);\n  const tiltStyle = useTilt(tilt);\n  return (\n    <ToggleGroupPrimitive.Item\n      ref={ref}\n      data-slot=\"toggle-group-item\"\n      style={{ ...tiltStyle, ...style }}\n      className={cn(toggleVariants({ variant: ctx.variant ?? variant, size: ctx.size ?? size }), className)}\n      {...props}\n    />\n  );\n});\nToggleGroupItem.displayName = \"ToggleGroupItem\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/toggle-group.tsx"
+    },
+    {
+      "path": "registry-src/components/toggle.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { Toggle as TogglePrimitive } from \"radix-ui\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn, useTilt, type Tilt } from \"@/lib/pixel3d\";\n\n/**\n * Toggle — a paper sticker you press in. Pressed = lime (chosen), lying flat and straight.\n * `outline` is a blank lid-coloured sticker with just the white kiss-cut.\n */\nexport const toggleVariants = cva(\n  \"sticker sticker-disabled focus-cut peel inline-flex shrink-0 cursor-pointer select-none items-center justify-center gap-2 whitespace-nowrap font-p3d font-extrabold [&_svg]:pixel-icon [&_svg]:shrink-0 data-[state=on]:face-lime data-[state=on]:sticker-flat data-[state=on]:[--p3d-tilt:0deg]\",\n  {\n    variants: {\n      variant: {\n        default: \"face-paper\",\n        outline: \"face-lid\",\n      },\n      size: {\n        sm: \"h-10 min-w-10 px-3 text-base [&_svg]:size-5\",\n        default: \"h-12 min-w-12 px-4 text-[17px] [&_svg]:size-6\",\n        lg: \"h-14 min-w-14 px-5 text-lg [&_svg]:size-6\",\n      },\n    },\n    defaultVariants: { variant: \"default\", size: \"default\" },\n  }\n);\n\nexport interface ToggleProps\n  extends React.ComponentPropsWithoutRef<typeof TogglePrimitive.Root>,\n    VariantProps<typeof toggleVariants> {\n  /** Resting angle when not pressed. \"auto\" (default) picks a stable crooked angle; false = straight. */\n  tilt?: Tilt;\n}\n\nexport const Toggle = React.forwardRef<React.ComponentRef<typeof TogglePrimitive.Root>, ToggleProps>(\n  ({ className, variant, size, tilt = \"auto\", style, ...props }, ref) => {\n    const tiltStyle = useTilt(tilt);\n    return (\n      <TogglePrimitive.Root\n        ref={ref}\n        data-slot=\"toggle\"\n        style={{ ...tiltStyle, ...style }}\n        className={cn(toggleVariants({ variant, size }), className)}\n        {...props}\n      />\n    );\n  }\n);\nToggle.displayName = \"Toggle\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/toggle.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

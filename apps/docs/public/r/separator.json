@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "separator",
+  "title": "Separator",
+  "description": "A 4px dotted pixel rule that splits content, across or down.",
+  "dependencies": [
+    "radix-ui@1.8.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/separator.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { Separator as SeparatorPrimitive } from \"radix-ui\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * Separator — a 4px dotted pixel rule, horizontal or vertical. It takes the current\n * text colour at half strength, so it reads on the lid and on any sticker face.\n */\nexport const Separator = React.forwardRef<\n  React.ComponentRef<typeof SeparatorPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof SeparatorPrimitive.Root>\n>(({ className, orientation = \"horizontal\", decorative = true, ...props }, ref) => (\n  <SeparatorPrimitive.Root\n    ref={ref}\n    data-slot=\"separator\"\n    decorative={decorative}\n    orientation={orientation}\n    className={cn(\n      \"shrink-0 opacity-50\",\n      orientation === \"horizontal\" ? \"pixel-rule w-full\" : \"pixel-rule-y self-stretch\",\n      className\n    )}\n    {...props}\n  />\n));\nSeparator.displayName = \"Separator\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/separator.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

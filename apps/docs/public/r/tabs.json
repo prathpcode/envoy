@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "tabs",
+  "title": "Tabs",
+  "description": "A row of paper stickers; the chosen one turns lime, straightens and lies flat.",
+  "dependencies": [
+    "radix-ui@1.8.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/tabs.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { Tabs as TabsPrimitive } from \"radix-ui\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * Tabs — a row of paper stickers; the selected one turns lime, straightens and lies flat.\n * Panels drop in.\n */\nexport const Tabs = TabsPrimitive.Root;\n\nexport const TabsList = React.forwardRef<\n  React.ComponentRef<typeof TabsPrimitive.List>,\n  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>\n>(({ className, ...props }, ref) => (\n  <TabsPrimitive.List\n    ref={ref}\n    data-slot=\"tabs-list\"\n    className={cn(\"inline-flex flex-wrap items-center gap-3 p-1\", className)}\n    {...props}\n  />\n));\nTabsList.displayName = \"TabsList\";\n\nconst tilts = [\"-1.5deg\", \"1.2deg\", \"-0.8deg\", \"1.8deg\", \"-2deg\", \"0.9deg\"];\n\nexport const TabsTrigger = React.forwardRef<\n  React.ComponentRef<typeof TabsPrimitive.Trigger>,\n  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger> & { index?: number }\n>(({ className, index = 0, style, ...props }, ref) => (\n  <TabsPrimitive.Trigger\n    ref={ref}\n    data-slot=\"tabs-trigger\"\n    style={{ [\"--p3d-tilt\" as string]: tilts[index % tilts.length], ...style }}\n    className={cn(\n      \"sticker sticker-disabled focus-cut peel face-paper inline-flex h-11 cursor-pointer items-center gap-2 px-4 text-[17px] font-extrabold\",\n      \"data-[state=active]:face-lime data-[state=active]:sticker-flat data-[state=active]:[--p3d-tilt:0deg]\",\n      \"[&_svg]:pixel-icon [&_svg]:size-5\",\n      className\n    )}\n    {...props}\n  />\n));\nTabsTrigger.displayName = \"TabsTrigger\";\n\nexport const TabsContent = React.forwardRef<\n  React.ComponentRef<typeof TabsPrimitive.Content>,\n  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>\n>(({ className, ...props }, ref) => (\n  <TabsPrimitive.Content\n    ref={ref}\n    data-slot=\"tabs-content\"\n    className={cn(\"mt-6 outline-none data-[state=active]:animate-drop-in\", className)}\n    {...props}\n  />\n));\nTabsContent.displayName = \"TabsContent\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/tabs.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

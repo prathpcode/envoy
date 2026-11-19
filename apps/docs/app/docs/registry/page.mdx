@@ -1,0 +1,53 @@
+import { NextPage } from "@/components/mdx-parts";
+
+export const metadata = { title: "Registry & CLI" };
+
+<div className="prose-p3d intro-page">
+
+# Registry & CLI
+
+pixel3d-ui is a [shadcn registry](https://ui.shadcn.com/docs/registry). Each component is a JSON item served from `/r/<name>.json` that lists its source files, npm dependencies and the other pixel3d items it needs. The shadcn CLI reads those items and writes real source files into your project.
+
+## Configure the namespace
+
+```json
+// components.json
+{
+  "registries": {
+    "@pixel3d": "https://YOUR-DOCS-HOST/r/{name}.json"
+  }
+}
+```
+
+Running the docs locally? Use `http://localhost:3000/r/{name}.json`.
+
+## Commands
+
+```bash
+npx shadcn@latest add @pixel3d/button          # one component
+npx shadcn@latest add @pixel3d/dialog @pixel3d/toast
+npx shadcn@latest view @pixel3d/data-table     # inspect before installing
+npx shadcn@latest add http://localhost:3000/r/button.json   # direct URL, no namespace
+```
+
+## What gets installed
+
+| Item | Contents |
+|---|---|
+| `@pixel3d/pixel3d` | The sticker material: `pixel3d.css` (tokens, utilities, keyframes) + the Bricolage Grotesque font dependency. Every other item depends on it. |
+| `@pixel3d/<component>` | `components/ui/<component>.tsx`, plus `lib/utils.ts` and any pixel3d components it composes. |
+| `@pixel3d/sticker-3d` and other 3D items | `components/ui/three/*` plus `three`, `@react-three/fiber` and `@react-three/drei`. |
+
+## Building the registry yourself
+
+The docs app generates `registry.json` from each component's doc module (its `files`, `dependencies` and `registryDependencies`), then runs `shadcn build` to write `public/r/*.json`:
+
+```bash
+pnpm --filter docs registry:build
+```
+
+Host the docs anywhere static files are served and the registry comes with it.
+
+<NextPage href="/docs" title="Back to the introduction" />
+
+</div>

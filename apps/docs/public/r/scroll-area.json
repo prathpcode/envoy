@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "scroll-area",
+  "title": "Scroll Area",
+  "description": "A scrolling region with an ink block thumb on a recessed lid track.",
+  "dependencies": [
+    "radix-ui@1.8.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d",
+    "@pixel3d/separator"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/scroll-area.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { ScrollArea as ScrollAreaPrimitive } from \"radix-ui\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * ScrollArea — custom scrollbars: an ink block thumb with stepped corners on a lid-deep\n * track. The root clips, so it must never be the `sticker` itself: put it inside one.\n */\nexport const ScrollArea = React.forwardRef<\n  React.ComponentRef<typeof ScrollAreaPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>\n>(({ className, children, ...props }, ref) => (\n  <ScrollAreaPrimitive.Root\n    ref={ref}\n    data-slot=\"scroll-area\"\n    className={cn(\"relative overflow-hidden\", className)}\n    {...props}\n  >\n    <ScrollAreaPrimitive.Viewport\n      data-slot=\"scroll-area-viewport\"\n      // focusable, so keyboard users can scroll it (axe: scrollable-region-focusable)\n      tabIndex={0}\n      className=\"size-full outline-none focus-visible:outline-4 focus-visible:-outline-offset-4 focus-visible:outline-sky\"\n    >\n      {children}\n    </ScrollAreaPrimitive.Viewport>\n    <ScrollBar />\n    <ScrollAreaPrimitive.Corner className=\"bg-lid-deep\" />\n  </ScrollAreaPrimitive.Root>\n));\nScrollArea.displayName = \"ScrollArea\";\n\nexport const ScrollBar = React.forwardRef<\n  React.ComponentRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>,\n  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>\n>(({ className, orientation = \"vertical\", ...props }, ref) => (\n  <ScrollAreaPrimitive.ScrollAreaScrollbar\n    ref={ref}\n    data-slot=\"scroll-area-scrollbar\"\n    orientation={orientation}\n    className={cn(\n      \"flex touch-none select-none bg-lid-deep p-0.5 transition-opacity duration-150\",\n      orientation === \"vertical\" && \"h-full w-3\",\n      orientation === \"horizontal\" && \"h-3 flex-col\",\n      className\n    )}\n    {...props}\n  >\n    <ScrollAreaPrimitive.ScrollAreaThumb\n      data-slot=\"scroll-area-thumb\"\n      className=\"pixel-thumb relative flex-1 cursor-grab active:cursor-grabbing\"\n    />\n  </ScrollAreaPrimitive.ScrollAreaScrollbar>\n));\nScrollBar.displayName = \"ScrollBar\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/scroll-area.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

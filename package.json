@@ -1,0 +1,15 @@
+{
+  "name": "pixel3d-ui-monorepo",
+  "private": true,
+  "packageManager": "pnpm@11.7.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "docs": "pnpm --filter docs dev"
+  },
+  "devDependencies": {
+    "turbo": "2.11.13",
+    "typescript": "5.9.3"
+  }
+}

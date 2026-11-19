@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "combobox",
+  "title": "Combobox",
+  "description": "A name-tag field that opens a searchable list. The pick lands a lime check-sticker.",
+  "dependencies": [
+    "cmdk@1.1.1",
+    "radix-ui@1.8.1",
+    "pixelarticons@2.4.2"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d",
+    "@pixel3d/command",
+    "@pixel3d/popover",
+    "@pixel3d/input"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/combobox.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { Check, ChevronsVertical } from \"pixelarticons/react\";\nimport { cn } from \"@/lib/pixel3d\";\nimport { nameTagClasses } from \"@/components/ui/input\";\nimport { Popover, PopoverContent, PopoverTrigger } from \"@/components/ui/popover\";\nimport { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from \"@/components/ui/command\";\n\n/**\n * Combobox — the shadcn Popover + Command pattern, ready to use. The trigger is a\n * name-tag field; the list highlights with a lime block, and the chosen option lands a\n * lime check-sticker.\n */\nexport interface ComboboxOption {\n  value: string;\n  label: string;\n  /** a pixelarticons element, e.g. <Robot /> */\n  icon?: React.ReactNode;\n  disabled?: boolean;\n  /** extra search terms */\n  keywords?: string[];\n}\n\nexport interface ComboboxProps {\n  options: ComboboxOption[];\n  value?: string;\n  defaultValue?: string;\n  onValueChange?: (value: string) => void;\n  /** Band text on the name tag. */\n  label?: React.ReactNode;\n  placeholder?: string;\n  searchPlaceholder?: string;\n  emptyText?: React.ReactNode;\n  disabled?: boolean;\n  className?: string;\n  id?: string;\n}\n\nexport function Combobox({\n  options,\n  value,\n  defaultValue = \"\",\n  onValueChange,\n  label,\n  placeholder = \"Pick one\",\n  searchPlaceholder = \"Search…\",\n  emptyText = \"Nothing matches.\",\n  disabled,\n  className,\n  id,\n}: ComboboxProps) {\n  const [open, setOpen] = React.useState(false);\n  const [inner, setInner] = React.useState(defaultValue);\n  const current = value !== undefined ? value : inner;\n  const selected = options.find((o) => o.value === current);\n\n  const choose = (next: string) => {\n    const v = next === current ? \"\" : next;\n    setInner(v);\n    onValueChange?.(v);\n    setOpen(false);\n  };\n\n  return (\n    <Popover open={open} onOpenChange={setOpen}>\n      <PopoverTrigger asChild>\n        <button\n          id={id}\n          type=\"button\"\n          role=\"combobox\"\n          aria-expanded={open}\n          disabled={disabled}\n          data-slot=\"combobox-trigger\"\n          className={cn(\n            nameTagClasses({ hasBand: Boolean(label), invalid: false, disabled }),\n            \"cursor-pointer text-left outline-none disabled:cursor-not-allowed\",\n            className\n          )}\n        >\n          {label && <span className=\"px-3 pt-1 pb-2 text-base font-bold leading-tight\">{label}</span>}\n          <span className=\"flex h-12 items-center gap-2 bg-paper px-3 text-ink\">\n            {selected?.icon && (\n              <span className=\"flex shrink-0 [&_svg]:pixel-icon [&_svg]:size-6\">{selected.icon}</span>\n            )}\n            <span className={cn(\"min-w-0 flex-1 truncate text-lg font-medium\", !selected && \"text-placeholder\")}>\n              {selected ? selected.label : placeholder}\n            </span>\n            <ChevronsVertical className=\"pixel-icon size-6 shrink-0 text-ink-soft\" aria-hidden />\n          </span>\n        </button>\n      </PopoverTrigger>\n      <PopoverContent align=\"start\" className=\"w-(--radix-popover-trigger-width) min-w-72 p-3\">\n        <Command frame={false}>\n          <CommandInput placeholder={searchPlaceholder} aria-label={searchPlaceholder} />\n          <CommandList>\n            <CommandEmpty>{emptyText}</CommandEmpty>\n            <CommandGroup>\n              {options.map((o) => (\n                <CommandItem\n                  key={o.value}\n                  value={o.value}\n                  keywords={[o.label, ...(o.keywords ?? [])]}\n                  disabled={o.disabled}\n                  onSelect={() => choose(o.value)}\n                >\n                  {o.icon}\n                  <span className=\"min-w-0 flex-1 truncate\">{o.label}</span>\n                  {o.value === current && (\n                    <span className=\"sticker face-lime animate-land grid size-6 shrink-0 place-items-center\">\n                      <Check className=\"pixel-icon size-4!\" aria-hidden />\n                    </span>\n                  )}\n                </CommandItem>\n              ))}\n            </CommandGroup>\n          </CommandList>\n        </Command>\n      </PopoverContent>\n    </Popover>\n  );\n}\nCombobox.displayName = \"Combobox\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/combobox.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

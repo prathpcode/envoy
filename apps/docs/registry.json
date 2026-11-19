@@ -1,0 +1,1653 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "pixel3d",
+  "homepage": "http://localhost:3000",
+  "items": [
+    {
+      "name": "pixel3d",
+      "type": "registry:style",
+      "title": "pixel3d-ui material",
+      "description": "The sticker material: tokens, utilities, keyframes and the Bricolage Grotesque font. Import app/pixel3d.css after tailwindcss.",
+      "dependencies": [
+        "@fontsource-variable/bricolage-grotesque@5.3.0",
+        "clsx@2.1.1",
+        "tailwind-merge@3.7.0"
+      ],
+      "files": [
+        {
+          "path": "registry-src/styles/data.css",
+          "type": "registry:file",
+          "target": "app/data.css"
+        },
+        {
+          "path": "registry-src/styles/forms.css",
+          "type": "registry:file",
+          "target": "app/forms.css"
+        },
+        {
+          "path": "registry-src/styles/kit.css",
+          "type": "registry:file",
+          "target": "app/kit.css"
+        },
+        {
+          "path": "registry-src/styles/navigation.css",
+          "type": "registry:file",
+          "target": "app/navigation.css"
+        },
+        {
+          "path": "registry-src/styles/overlays.css",
+          "type": "registry:file",
+          "target": "app/overlays.css"
+        },
+        {
+          "path": "registry-src/styles/pixel3d.css",
+          "type": "registry:file",
+          "target": "app/pixel3d.css"
+        },
+        {
+          "path": "registry-src/styles/transitions.css",
+          "type": "registry:file",
+          "target": "app/transitions.css"
+        },
+        {
+          "path": "registry-src/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/pixel3d.ts"
+        }
+      ]
+    },
+    {
+      "name": "accordion",
+      "type": "registry:ui",
+      "title": "Accordion",
+      "description": "A stack of paper stickers that hinge open from the top edge, one answer at a time.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/accordion.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/accordion.tsx"
+        }
+      ]
+    },
+    {
+      "name": "alert-dialog",
+      "type": "registry:ui",
+      "title": "Alert Dialog",
+      "description": "A dialog sticker you have to answer: confirm or cancel, with tomato for anything destructive.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/button"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/alert-dialog.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/alert-dialog.tsx"
+        }
+      ]
+    },
+    {
+      "name": "alert",
+      "type": "registry:ui",
+      "title": "Alert",
+      "description": "A straight sticker with a pixel icon, whose ink says what kind of news it is.",
+      "dependencies": [
+        "class-variance-authority@0.7.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/alert.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/alert.tsx"
+        }
+      ]
+    },
+    {
+      "name": "aspect-ratio",
+      "type": "registry:ui",
+      "title": "Aspect Ratio",
+      "description": "Holds media to a fixed shape inside its sticker.",
+      "dependencies": [
+        "radix-ui@1.8.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/button"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/aspect-ratio.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/aspect-ratio.tsx"
+        }
+      ]
+    },
+    {
+      "name": "avatar",
+      "type": "registry:ui",
+      "title": "Avatar",
+      "description": "A small square sticker with your photo printed on it, or your initials on an ink picked from your name.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/avatar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/avatar.tsx"
+        }
+      ]
+    },
+    {
+      "name": "badge",
+      "type": "registry:ui",
+      "title": "Badge",
+      "description": "A tiny crooked sticker for a status that matters.",
+      "dependencies": [
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/badge.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/badge.tsx"
+        }
+      ]
+    },
+    {
+      "name": "breadcrumb",
+      "type": "registry:ui",
+      "title": "Breadcrumb",
+      "description": "The trail back home, with the current page stuck on as a small crooked pink sticker.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/breadcrumb.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/breadcrumb.tsx"
+        }
+      ]
+    },
+    {
+      "name": "button-group",
+      "type": "registry:ui",
+      "title": "Button Group",
+      "description": "Buttons fused edge to edge into one straight sticker strip with ink pixel dividers.",
+      "dependencies": [],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/button"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/button-group.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/button-group.tsx"
+        }
+      ]
+    },
+    {
+      "name": "button",
+      "type": "registry:ui",
+      "title": "Button",
+      "description": "A die-cut sticker that peels up on hover and slaps down when you press it.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/button.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "calendar",
+      "type": "registry:ui",
+      "title": "Calendar",
+      "description": "A grid of small square stickers. The day you pick becomes a lime sticker that lands, and today has a pink underline.",
+      "dependencies": [
+        "react-day-picker@10.0.2",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/calendar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/calendar.tsx"
+        }
+      ]
+    },
+    {
+      "name": "card",
+      "type": "registry:ui",
+      "title": "Card",
+      "description": "A big sticker with stepped corners: one heading, one line, one action.",
+      "dependencies": [],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/button"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/card.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/card.tsx"
+        }
+      ]
+    },
+    {
+      "name": "carousel",
+      "type": "registry:ui",
+      "title": "Carousel",
+      "description": "A cover-flow of stickers: the centre one straightens and lifts while its neighbours tilt away in 3D.",
+      "dependencies": [
+        "embla-carousel-react@8.6.0",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/button"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/carousel.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/carousel.tsx"
+        }
+      ]
+    },
+    {
+      "name": "chart",
+      "type": "registry:ui",
+      "title": "Chart",
+      "description": "Recharts in pixels: square bars, stepped lines, square markers and a paper-sticker tooltip.",
+      "dependencies": [
+        "recharts@3.11.0"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/chart.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/chart.tsx"
+        }
+      ]
+    },
+    {
+      "name": "checkbox",
+      "type": "registry:ui",
+      "title": "Checkbox",
+      "description": "A stamp. Checking turns the whole sticker lime with a pixel check and thunks it down.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/checkbox.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/checkbox.tsx"
+        }
+      ]
+    },
+    {
+      "name": "code-block",
+      "type": "registry:ui",
+      "title": "CodeBlock",
+      "description": "A straight paper sticker for code, with a copy-button sticker and an optional filename tab.",
+      "dependencies": [
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/code-block.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/code-block.tsx"
+        }
+      ]
+    },
+    {
+      "name": "collapsible",
+      "type": "registry:ui",
+      "title": "Collapsible",
+      "description": "Shows and hides a region with the same top-edge hinge as Accordion.",
+      "dependencies": [
+        "radix-ui@1.8.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/button"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/collapsible.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/collapsible.tsx"
+        }
+      ]
+    },
+    {
+      "name": "combobox",
+      "type": "registry:ui",
+      "title": "Combobox",
+      "description": "A name-tag field that opens a searchable list. The pick lands a lime check-sticker.",
+      "dependencies": [
+        "cmdk@1.1.1",
+        "radix-ui@1.8.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/command",
+        "@pixel3d/popover",
+        "@pixel3d/input"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/combobox.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/combobox.tsx"
+        }
+      ]
+    },
+    {
+      "name": "command",
+      "type": "registry:ui",
+      "title": "Command",
+      "description": "A search name-tag over a list you can filter by typing. The highlighted row becomes a lime block.",
+      "dependencies": [
+        "cmdk@1.1.1",
+        "radix-ui@1.8.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/dialog",
+        "@pixel3d/input",
+        "@pixel3d/dropdown-menu"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/command.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/command.tsx"
+        },
+        {
+          "path": "registry-src/components/dialog.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/dialog.tsx"
+        },
+        {
+          "path": "registry-src/components/dropdown-menu.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/dropdown-menu.tsx"
+        }
+      ]
+    },
+    {
+      "name": "context-menu",
+      "type": "registry:ui",
+      "title": "Context Menu",
+      "description": "The right-click menu, as the same straight paper sticker as Dropdown Menu.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/dropdown-menu"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/context-menu.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/context-menu.tsx"
+        },
+        {
+          "path": "registry-src/components/dropdown-menu.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/dropdown-menu.tsx"
+        }
+      ]
+    },
+    {
+      "name": "countdown",
+      "type": "registry:ui",
+      "title": "Countdown",
+      "description": "A big days, hours, minutes, seconds readout where each unit is a paper sticker that flips over when it ticks.",
+      "dependencies": [],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/countdown.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/countdown.tsx"
+        }
+      ]
+    },
+    {
+      "name": "data-table",
+      "type": "registry:ui",
+      "title": "DataTable",
+      "description": "A ready-made table on TanStack Table v9 with sorting, search, row selection and pages.",
+      "dependencies": [
+        "@tanstack/react-table@9.3.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/table",
+        "@pixel3d/button",
+        "@pixel3d/checkbox",
+        "@pixel3d/input"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/data-table.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/data-table.tsx"
+        },
+        {
+          "path": "registry-src/components/table.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/table.tsx"
+        }
+      ]
+    },
+    {
+      "name": "date-picker",
+      "type": "registry:ui",
+      "title": "Date Picker",
+      "description": "A name-tag field that opens a Calendar sticker, for one day or a range.",
+      "dependencies": [
+        "react-day-picker@10.0.2",
+        "radix-ui@1.8.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/calendar",
+        "@pixel3d/popover",
+        "@pixel3d/input"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/date-picker.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-picker.tsx"
+        }
+      ]
+    },
+    {
+      "name": "dialog",
+      "type": "registry:ui",
+      "title": "Dialog",
+      "description": "A big paper sticker slapped onto the screen: it drops in crooked, settles straight and lifts off when closed.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/dialog.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/dialog.tsx"
+        }
+      ]
+    },
+    {
+      "name": "dither-image",
+      "type": "registry:ui",
+      "title": "DitherImage",
+      "description": "Any image printed like a vinyl sticker: a 4×4 Bayer dither in Ink plus one ink colour, with crisp chunky pixels.",
+      "dependencies": [],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/dither-image.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/dither-image.tsx"
+        }
+      ]
+    },
+    {
+      "name": "drawer",
+      "type": "registry:ui",
+      "title": "Drawer",
+      "description": "A paper sticker you drag up from the bottom edge, with a checkered pixel grip on top.",
+      "dependencies": [
+        "vaul@1.1.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/drawer.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/drawer.tsx"
+        }
+      ]
+    },
+    {
+      "name": "dropdown-menu",
+      "type": "registry:ui",
+      "title": "Dropdown Menu",
+      "description": "A straight paper sticker of actions: the highlighted row turns pink, and checked rows land a lime check.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/dropdown-menu.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/dropdown-menu.tsx"
+        }
+      ]
+    },
+    {
+      "name": "dropzone",
+      "type": "registry:ui",
+      "title": "Dropzone",
+      "description": "An empty sticker slot on the lid that peels up sky when you drag files over it; dropped files slap down as little file stickers.",
+      "dependencies": [
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/dropzone.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/dropzone.tsx"
+        }
+      ]
+    },
+    {
+      "name": "empty",
+      "type": "registry:ui",
+      "title": "Empty",
+      "description": "An empty state on bare lid: a 3D sticker, one heading, one line and one action.",
+      "dependencies": [],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/sticker-3d",
+        "@pixel3d/button"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/empty.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/empty.tsx"
+        }
+      ]
+    },
+    {
+      "name": "field",
+      "type": "registry:ui",
+      "title": "Field",
+      "description": "Layout parts for composing forms: groups, fieldsets, labels and problem-plus-fix error stickers.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "class-variance-authority@0.7.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/label"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/field.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/field.tsx"
+        },
+        {
+          "path": "registry-src/components/label.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/label.tsx"
+        }
+      ]
+    },
+    {
+      "name": "hover-card",
+      "type": "registry:ui",
+      "title": "Hover Card",
+      "description": "A paper sticker that drops in while you hover a link, to preview who or what is behind it.",
+      "dependencies": [
+        "radix-ui@1.8.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/hover-card.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/hover-card.tsx"
+        }
+      ]
+    },
+    {
+      "name": "input-group",
+      "type": "registry:ui",
+      "title": "Input Group",
+      "description": "A name-tag field with addons in the writing panel: a prefix, an icon, a Kbd hint or a small button.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/input",
+        "@pixel3d/button"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/input-group.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/input-group.tsx"
+        },
+        {
+          "path": "registry-src/components/input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/input.tsx"
+        },
+        {
+          "path": "registry-src/components/button.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "input-otp",
+      "type": "registry:ui",
+      "title": "Input OTP",
+      "description": "One square sticker per character; the active one cuts sky with a pink caret and each digit slaps in.",
+      "dependencies": [
+        "input-otp@1.5.0",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/input-otp.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/input-otp.tsx"
+        }
+      ]
+    },
+    {
+      "name": "input",
+      "type": "registry:ui",
+      "title": "Input",
+      "description": "A name-tag sticker: the label lives in the band, you write on the white panel.",
+      "dependencies": [],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/input.tsx"
+        }
+      ]
+    },
+    {
+      "name": "item",
+      "type": "registry:ui",
+      "title": "Item",
+      "description": "A list row as a straight paper sticker: media, a title, one line, actions.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/button"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/item.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/item.tsx"
+        }
+      ]
+    },
+    {
+      "name": "kbd",
+      "type": "registry:ui",
+      "title": "Kbd",
+      "description": "A key cap: a tiny paper sticker with a stepped pixel lip along the bottom.",
+      "dependencies": [],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/kbd.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/kbd.tsx"
+        }
+      ]
+    },
+    {
+      "name": "label",
+      "type": "registry:ui",
+      "title": "Label",
+      "description": "The text beside a Checkbox, Switch or radio; clicking it toggles the control.",
+      "dependencies": [
+        "radix-ui@1.8.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/label.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/label.tsx"
+        }
+      ]
+    },
+    {
+      "name": "leaderboard",
+      "type": "registry:ui",
+      "title": "Leaderboard",
+      "description": "Ranked rows of paper stickers with pixel score bars that slide into their new places as scores change.",
+      "dependencies": [
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/leaderboard.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/leaderboard.tsx"
+        }
+      ]
+    },
+    {
+      "name": "marquee",
+      "type": "registry:ui",
+      "title": "Marquee",
+      "description": "An endless row of crooked stickers scrolling across the lid, pausing when you hover or focus it.",
+      "dependencies": [],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/marquee.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/marquee.tsx"
+        }
+      ]
+    },
+    {
+      "name": "menubar",
+      "type": "registry:ui",
+      "title": "Menubar",
+      "description": "A long, straight paper sticker of menus. The open one gets the pink block.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/dropdown-menu"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/menubar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/menubar.tsx"
+        },
+        {
+          "path": "registry-src/components/dropdown-menu.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/dropdown-menu.tsx"
+        }
+      ]
+    },
+    {
+      "name": "navigation-menu",
+      "type": "registry:ui",
+      "title": "Navigation Menu",
+      "description": "Site navigation whose paper triggers peel up and drop a straight paper panel of links.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "class-variance-authority@0.7.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/navigation-menu.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/navigation-menu.tsx"
+        }
+      ]
+    },
+    {
+      "name": "page-transition",
+      "type": "registry:ui",
+      "title": "Page Transitions",
+      "description": "Route changes slide the new page in instantly; pages and sections get their stickers stuck on as they arrive.",
+      "dependencies": [
+        "radix-ui@1.8.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/page-transition.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/page-transition.tsx"
+        }
+      ]
+    },
+    {
+      "name": "pagination",
+      "type": "registry:ui",
+      "title": "Pagination",
+      "description": "Pages as small square stickers; the one you're on is lime and pressed flat.",
+      "dependencies": [
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/pagination.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/pagination.tsx"
+        }
+      ]
+    },
+    {
+      "name": "pixel-avatar",
+      "type": "registry:ui",
+      "title": "PixelAvatar",
+      "description": "A symmetric 8×8 pixel sprite generated from a name, printed on a crooked paper sticker. Same name, same face.",
+      "dependencies": [
+        "class-variance-authority@0.7.1",
+        "three@0.187.0",
+        "@react-three/fiber@9.8.2",
+        "@react-three/drei@10.7.9"
+      ],
+      "devDependencies": [
+        "@types/three@0.187.0"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/sticker-3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/pixel-avatar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/pixel-avatar.tsx"
+        },
+        {
+          "path": "registry-src/three/sticker-3d.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/sticker-3d.tsx"
+        },
+        {
+          "path": "registry-src/three/voxel-sticker.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/voxel-sticker.tsx"
+        },
+        {
+          "path": "registry-src/three/patterns.ts",
+          "type": "registry:ui",
+          "target": "components/ui/three/patterns.ts"
+        },
+        {
+          "path": "registry-src/three/sticker-canvas.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/sticker-canvas.tsx"
+        }
+      ]
+    },
+    {
+      "name": "popover",
+      "type": "registry:ui",
+      "title": "Popover",
+      "description": "A straight paper sticker that drops in next to its trigger, for small tasks that keep the page in view.",
+      "dependencies": [
+        "radix-ui@1.8.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/popover.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/popover.tsx"
+        }
+      ]
+    },
+    {
+      "name": "progress",
+      "type": "registry:ui",
+      "title": "Progress",
+      "description": "A pixel XP bar: a paper track that fills with pink blocks, one 8px block at a time.",
+      "dependencies": [
+        "radix-ui@1.8.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/progress.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/progress.tsx"
+        }
+      ]
+    },
+    {
+      "name": "radio-group",
+      "type": "registry:ui",
+      "title": "Radio Group",
+      "description": "Square paper stickers that land a lime pixel dot, or full sticker tiles that go lime when chosen.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/radio-group.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/radio-group.tsx"
+        }
+      ]
+    },
+    {
+      "name": "resizable",
+      "type": "registry:ui",
+      "title": "Resizable",
+      "description": "Panels you drag apart by a little ink grip sticker.",
+      "dependencies": [
+        "react-resizable-panels@4.24.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/resizable.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/resizable.tsx"
+        }
+      ]
+    },
+    {
+      "name": "scroll-area",
+      "type": "registry:ui",
+      "title": "Scroll Area",
+      "description": "A scrolling region with an ink block thumb on a recessed lid track.",
+      "dependencies": [
+        "radix-ui@1.8.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/separator"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/scroll-area.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/scroll-area.tsx"
+        }
+      ]
+    },
+    {
+      "name": "select",
+      "type": "registry:ui",
+      "title": "Select",
+      "description": "A name-tag field that drops a paper list; the chosen item lands a lime check-sticker.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/input"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/select.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/select.tsx"
+        },
+        {
+          "path": "registry-src/components/input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/input.tsx"
+        }
+      ]
+    },
+    {
+      "name": "separator",
+      "type": "registry:ui",
+      "title": "Separator",
+      "description": "A 4px dotted pixel rule that splits content, across or down.",
+      "dependencies": [
+        "radix-ui@1.8.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/separator.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/separator.tsx"
+        }
+      ]
+    },
+    {
+      "name": "sheet",
+      "type": "registry:ui",
+      "title": "Sheet",
+      "description": "A big paper sticker that slides in from any edge of the screen and settles straight.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "class-variance-authority@0.7.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/sheet.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/sheet.tsx"
+        }
+      ]
+    },
+    {
+      "name": "sidebar",
+      "type": "registry:ui",
+      "title": "Sidebar",
+      "description": "An app sidebar recessed into the lid, collapsing to an icon rail and sliding in on phones.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/button"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/sidebar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/sidebar.tsx"
+        }
+      ]
+    },
+    {
+      "name": "skeleton",
+      "type": "registry:ui",
+      "title": "Skeleton",
+      "description": "A recessed lid block with a dithered pixel shimmer that sweeps across in steps.",
+      "dependencies": [],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/skeleton.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/skeleton.tsx"
+        }
+      ]
+    },
+    {
+      "name": "slider",
+      "type": "registry:ui",
+      "title": "Slider",
+      "description": "A paper sticker bar with a pink pixel fill and a crooked ink thumb you peel and drag.",
+      "dependencies": [
+        "radix-ui@1.8.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/slider.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/slider.tsx"
+        }
+      ]
+    },
+    {
+      "name": "spinner",
+      "type": "registry:ui",
+      "title": "Spinner",
+      "description": "Eight pixel blocks turning in steps, announced as a status.",
+      "dependencies": [
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/button"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/spinner.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/spinner.tsx"
+        },
+        {
+          "path": "registry-src/components/button.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "stepper",
+      "type": "registry:ui",
+      "title": "Stepper",
+      "description": "Square sticker steps joined by pixel-dotted rules: lime with a landed check when done, pink for where you are.",
+      "dependencies": [
+        "pixelarticons@2.4.2"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/stepper.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/stepper.tsx"
+        }
+      ]
+    },
+    {
+      "name": "sticker-3d",
+      "type": "registry:ui",
+      "title": "Sticker3D",
+      "description": "A real three.js voxel sticker that sits in your layout and peels toward you on hover.",
+      "dependencies": [
+        "three@0.187.0",
+        "@react-three/fiber@9.8.2",
+        "@react-three/drei@10.7.9"
+      ],
+      "devDependencies": [
+        "@types/three@0.187.0"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/three/sticker-3d.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/sticker-3d.tsx"
+        },
+        {
+          "path": "registry-src/three/voxel-sticker.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/voxel-sticker.tsx"
+        },
+        {
+          "path": "registry-src/three/patterns.ts",
+          "type": "registry:ui",
+          "target": "components/ui/three/patterns.ts"
+        },
+        {
+          "path": "registry-src/three/sticker-canvas.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/sticker-canvas.tsx"
+        }
+      ]
+    },
+    {
+      "name": "sticker-burst",
+      "type": "registry:ui",
+      "title": "StickerBurst",
+      "description": "A celebratory pop of tiny voxel stickers that arc, tumble and fade from the thing you just finished.",
+      "dependencies": [
+        "three@0.187.0",
+        "@react-three/fiber@9.8.2",
+        "@react-three/drei@10.7.9"
+      ],
+      "devDependencies": [
+        "@types/three@0.187.0"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/three/sticker-burst.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/sticker-burst.tsx"
+        },
+        {
+          "path": "registry-src/three/patterns-extra.ts",
+          "type": "registry:ui",
+          "target": "components/ui/three/patterns-extra.ts"
+        },
+        {
+          "path": "registry-src/three/patterns.ts",
+          "type": "registry:ui",
+          "target": "components/ui/three/patterns.ts"
+        },
+        {
+          "path": "registry-src/three/sticker-canvas.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/sticker-canvas.tsx"
+        }
+      ]
+    },
+    {
+      "name": "sticker-scene",
+      "type": "registry:ui",
+      "title": "StickerScene",
+      "description": "A hero-sized cluster of voxel stickers floating at different depths that drift, lean toward your pointer and peel when touched.",
+      "dependencies": [
+        "three@0.187.0",
+        "@react-three/fiber@9.8.2",
+        "@react-three/drei@10.7.9"
+      ],
+      "devDependencies": [
+        "@types/three@0.187.0"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/sticker-3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/three/sticker-scene.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/sticker-scene.tsx"
+        },
+        {
+          "path": "registry-src/three/voxel-sticker.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/voxel-sticker.tsx"
+        },
+        {
+          "path": "registry-src/three/sticker-3d.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/sticker-3d.tsx"
+        },
+        {
+          "path": "registry-src/three/patterns.ts",
+          "type": "registry:ui",
+          "target": "components/ui/three/patterns.ts"
+        },
+        {
+          "path": "registry-src/three/sticker-canvas.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/sticker-canvas.tsx"
+        }
+      ]
+    },
+    {
+      "name": "switch",
+      "type": "registry:ui",
+      "title": "Switch",
+      "description": "A sticker track with an ink block knob that springs across; on turns the track sky.",
+      "dependencies": [
+        "radix-ui@1.8.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/switch.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/switch.tsx"
+        }
+      ]
+    },
+    {
+      "name": "table",
+      "type": "registry:ui",
+      "title": "Table",
+      "description": "A plain HTML table printed on one straight paper sticker, with an ink header rule and dashed pixel rows.",
+      "dependencies": [],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/table.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/table.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tabs",
+      "type": "registry:ui",
+      "title": "Tabs",
+      "description": "A row of paper stickers; the chosen one turns lime, straightens and lies flat.",
+      "dependencies": [
+        "radix-ui@1.8.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/tabs.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/tabs.tsx"
+        }
+      ]
+    },
+    {
+      "name": "team-card",
+      "type": "registry:ui",
+      "title": "TeamCard",
+      "description": "One card sticker per hackathon team: the crew's pixel avatars, the team name, its track and one action.",
+      "dependencies": [],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/card",
+        "@pixel3d/badge",
+        "@pixel3d/pixel-avatar"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/team-card.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/team-card.tsx"
+        },
+        {
+          "path": "registry-src/components/card.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/card.tsx"
+        },
+        {
+          "path": "registry-src/components/badge.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/badge.tsx"
+        },
+        {
+          "path": "registry-src/components/pixel-avatar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/pixel-avatar.tsx"
+        }
+      ]
+    },
+    {
+      "name": "textarea",
+      "type": "registry:ui",
+      "title": "Textarea",
+      "description": "A tall name-tag sticker for long answers, with an optional auto-grow panel.",
+      "dependencies": [],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/input"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/textarea.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/textarea.tsx"
+        },
+        {
+          "path": "registry-src/components/input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/input.tsx"
+        }
+      ]
+    },
+    {
+      "name": "toast",
+      "type": "registry:ui",
+      "title": "Toast",
+      "description": "Crooked stickers that drop onto the corner of the screen with a stepped bounce: lime, tomato, butter, sky or paper.",
+      "dependencies": [
+        "sonner@2.0.8",
+        "pixelarticons@2.4.2",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/button"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/sonner.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/sonner.tsx"
+        },
+        {
+          "path": "registry-src/components/button.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "toggle-group",
+      "type": "registry:ui",
+      "title": "Toggle Group",
+      "description": "A row of toggle stickers for picking one or many; chosen ones go lime and lie flat.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/toggle"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/toggle-group.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/toggle-group.tsx"
+        },
+        {
+          "path": "registry-src/components/toggle.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/toggle.tsx"
+        }
+      ]
+    },
+    {
+      "name": "toggle",
+      "type": "registry:ui",
+      "title": "Toggle",
+      "description": "A paper sticker you press in: pressed turns lime, lies flat and straightens.",
+      "dependencies": [
+        "radix-ui@1.8.1",
+        "class-variance-authority@0.7.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/toggle.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/toggle.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tooltip",
+      "type": "registry:ui",
+      "title": "Tooltip",
+      "description": "A small ink sticker with paper text that names an icon button.",
+      "dependencies": [
+        "radix-ui@1.8.1"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/tooltip.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/tooltip.tsx"
+        }
+      ]
+    },
+    {
+      "name": "typography",
+      "type": "registry:ui",
+      "title": "Typography",
+      "description": "The type scale as components: chunky Bricolage headings, 18px body, nothing under 14px.",
+      "dependencies": [],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/typography.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/typography.tsx"
+        }
+      ]
+    },
+    {
+      "name": "voxel-text",
+      "type": "registry:ui",
+      "title": "VoxelText",
+      "description": "A word built from voxel cubes in a 5×7 pixel font, on one white kiss-cut backing, peeling toward you on hover.",
+      "dependencies": [
+        "three@0.187.0",
+        "@react-three/fiber@9.8.2",
+        "@react-three/drei@10.7.9"
+      ],
+      "devDependencies": [
+        "@types/three@0.187.0"
+      ],
+      "registryDependencies": [
+        "@pixel3d/pixel3d",
+        "@pixel3d/sticker-3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/three/voxel-text.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/voxel-text.tsx"
+        },
+        {
+          "path": "registry-src/three/patterns-extra.ts",
+          "type": "registry:ui",
+          "target": "components/ui/three/patterns-extra.ts"
+        },
+        {
+          "path": "registry-src/three/voxel-sticker.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/voxel-sticker.tsx"
+        },
+        {
+          "path": "registry-src/three/sticker-3d.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/sticker-3d.tsx"
+        },
+        {
+          "path": "registry-src/three/sticker-canvas.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/three/sticker-canvas.tsx"
+        }
+      ]
+    },
+    {
+      "name": "xp-bar",
+      "type": "registry:ui",
+      "title": "XPBar",
+      "description": "A game-style XP, health or mana bar of discrete 8px blocks that land one by one when you gain.",
+      "dependencies": [],
+      "registryDependencies": [
+        "@pixel3d/pixel3d"
+      ],
+      "files": [
+        {
+          "path": "registry-src/components/xp-bar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/xp-bar.tsx"
+        }
+      ]
+    }
+  ]
+}

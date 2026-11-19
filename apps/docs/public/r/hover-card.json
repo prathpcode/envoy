@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "hover-card",
+  "title": "Hover Card",
+  "description": "A paper sticker that drops in while you hover a link, to preview who or what is behind it.",
+  "dependencies": [
+    "radix-ui@1.8.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/hover-card.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { HoverCard as HoverCardPrimitive } from \"radix-ui\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * HoverCard — a straight paper sticker that drops in while you hover a link.\n * A preview only: never put the one way to do something inside it.\n */\nexport const HoverCard = HoverCardPrimitive.Root;\nexport const HoverCardTrigger = HoverCardPrimitive.Trigger;\n\nexport const HoverCardContent = React.forwardRef<\n  React.ComponentRef<typeof HoverCardPrimitive.Content>,\n  React.ComponentPropsWithoutRef<typeof HoverCardPrimitive.Content>\n>(({ className, align = \"center\", sideOffset = 12, collisionPadding = 16, ...props }, ref) => (\n  <HoverCardPrimitive.Portal>\n    <HoverCardPrimitive.Content\n      ref={ref}\n      data-slot=\"hover-card-content\"\n      align={align}\n      sideOffset={sideOffset}\n      collisionPadding={collisionPadding}\n      className={cn(\n        \"sticker sticker-lg face-paper overlay-motion z-50 flex w-72 flex-col gap-3 p-5 outline-none origin-(--radix-hover-card-content-transform-origin)\",\n        className\n      )}\n      {...props}\n    />\n  </HoverCardPrimitive.Portal>\n));\nHoverCardContent.displayName = \"HoverCardContent\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/hover-card.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

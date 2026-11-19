@@ -1,0 +1,75 @@
+import { NextPage } from "@/components/mdx-parts";
+
+export const metadata = { title: "Hackathon playbook" };
+
+<div className="prose-p3d intro-page">
+
+# Hackathon playbook
+
+You have 36 hours and a demo slot of three minutes. This is how to spend as few of those hours as possible on UI and still have the judges remember your project.
+
+## Hour 0: set up (10 minutes)
+
+```bash
+npx create-next-app@latest my-hack --ts --tailwind --app
+cd my-hack && npx shadcn@latest init
+# add the @pixel3d registry to components.json, then:
+npx shadcn@latest add @pixel3d/button @pixel3d/input @pixel3d/card \
+  @pixel3d/dialog @pixel3d/toast @pixel3d/sticker-3d
+```
+
+Wrap your layout in `<StickerCanvas>` and drop a `<Toaster />` next to it. Done: everything you build from here looks like one product.
+
+## The three screens every hack needs
+
+### 1. The landing / first screen
+
+Judges decide in seconds. One big idea, one action.
+
+- One `VoxelText` or big H1 with your project's name, and one line saying what it does.
+- One pink `Button` that starts the real thing, not "Learn more".
+- A `StickerScene` or a single large `Sticker3D` for the wow. Leave bare lid around it.
+
+### 2. The working screen
+
+This is your product. Keep it calm: straight fields, straight tables, stickers only where you click.
+
+- Forms: name-tag `Input`s, `Select`, `RadioGroup variant="cards"` for big choices, one pink submit.
+- Data: `DataTable` for lists, `Chart` for "look, it works", `Empty` with a `Sticker3D` for no-data states.
+- Feedback: `toast.success()` for saves, `Progress` / `XPBar` for anything that takes time.
+
+### 3. The "it worked" moment
+
+Your demo needs a beat where something satisfying happens. Make it the real result, then celebrate it once:
+
+```tsx
+const burst = useStickerBurst();
+<Button onClick={(e) => { submit(); burst(e.currentTarget); }}>Submit project</Button>
+```
+
+## Demo-day checklist
+
+- [ ] Projector test: switch to the light lid. Silver reads better than dark on washed-out projectors.
+- [ ] One pink action per screen. Count them.
+- [ ] No text under 14px (pixel3d won't let you, but your own markup might).
+- [ ] Real content, no lorem ipsum. Fake data is fine; label it.
+- [ ] Every button says what it does: "Generate level", not "Submit".
+- [ ] Turn on reduced motion once, and make sure the demo still makes sense.
+- [ ] Hit the happy path ten times. The slap should still feel good the tenth time.
+
+## Recipes
+
+| You need | Reach for |
+|---|---|
+| Sign-up / registration | `Stepper` + `Field` + name-tag `Input` + `RadioGroup variant="cards"` |
+| Team page | `TeamCard`, `PixelAvatar`, `Badge` for the track |
+| Live ranking | `Leaderboard` (animates reorders) |
+| Countdown to judging | `Countdown` |
+| Upload a demo video | `Dropzone` + `Progress` |
+| ⌘K anything | `Command` in `CommandDialog` |
+| Settings | `Switch`, `ToggleGroup`, `Separator`, `Sheet` |
+| Celebrate | `useStickerBurst`, `toast.success` |
+
+<NextPage href="/docs/registry" title="Registry & CLI" />
+
+</div>

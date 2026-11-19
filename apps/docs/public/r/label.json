@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "label",
+  "title": "Label",
+  "description": "The text beside a Checkbox, Switch or radio; clicking it toggles the control.",
+  "dependencies": [
+    "radix-ui@1.8.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/label.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { Label as LabelPrimitive } from \"radix-ui\";\nimport { cn } from \"@/lib/pixel3d\";\n\nexport const Label = React.forwardRef<\n  React.ComponentRef<typeof LabelPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>\n>(({ className, ...props }, ref) => (\n  <LabelPrimitive.Root\n    ref={ref}\n    data-slot=\"label\"\n    className={cn(\n      // colour inherits: on-lid on the page, ink inside any sticker face (dialogs, sheets, cards)\n      \"inline-flex cursor-pointer items-center gap-3 text-[17px] font-semibold leading-tight text-inherit peer-disabled:cursor-not-allowed peer-disabled:opacity-60\",\n      className\n    )}\n    {...props}\n  />\n));\nLabel.displayName = \"Label\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/label.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "item",
+  "title": "Item",
+  "description": "A list row as a straight paper sticker: media, a title, one line, actions.",
+  "dependencies": [
+    "radix-ui@1.8.1",
+    "class-variance-authority@0.7.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d",
+    "@pixel3d/button"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/item.tsx",
+      "content": "import * as React from \"react\";\nimport { Slot } from \"radix-ui\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * Item — a list row as a straight paper sticker: media, a title, one line, actions.\n * As a link (`asChild` with an <a>) it lifts gently on hover. Same parts as shadcn Item.\n */\nexport const itemVariants = cva(\n  \"group/item sticker focus-within-cut flex w-full items-center gap-4 text-left\",\n  {\n    variants: {\n      variant: {\n        paper: \"face-paper\",\n        lid: \"face-lid\",\n        flat: \"face-paper sticker-flat\",\n      },\n      size: {\n        default: \"min-h-18 px-5 py-4\",\n        sm: \"min-h-14 px-4 py-3 gap-3\",\n      },\n    },\n    defaultVariants: { variant: \"paper\", size: \"default\" },\n  }\n);\n\nexport interface ItemProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof itemVariants> {\n  asChild?: boolean;\n}\n\nexport const Item = React.forwardRef<HTMLDivElement, ItemProps>(\n  ({ className, variant, size, asChild = false, ...props }, ref) => {\n    const Comp = asChild ? Slot.Root : \"div\";\n    return (\n      <Comp\n        ref={ref}\n        data-slot=\"item\"\n        className={cn(\n          itemVariants({ variant, size }),\n          \"[a&]:cursor-pointer [a&]:outline-none [a&]:transition-[transform,filter] [a&]:duration-[260ms] [a&]:ease-peel\",\n          \"[a&]:hover:-translate-y-1 [a&]:hover:[--p3d-sh:0_12px_12px_rgb(var(--p3d-shadow)/0.22)] [a&]:active:translate-y-0 [a&]:active:[--p3d-sh:0_2px_2px_rgb(var(--p3d-shadow)/0.3)]\",\n          className\n        )}\n        {...props}\n      />\n    );\n  }\n);\nItem.displayName = \"Item\";\n\nexport const ItemGroup = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(\n  ({ className, ...props }, ref) => (\n    <div ref={ref} role=\"list\" data-slot=\"item-group\" className={cn(\"flex w-full flex-col gap-4\", className)} {...props} />\n  )\n);\nItemGroup.displayName = \"ItemGroup\";\n\nconst itemMediaVariants = cva(\"flex shrink-0 items-center justify-center\", {\n  variants: {\n    variant: {\n      default: \"\",\n      icon: \"size-12 bg-lid-deep/60 text-ink [&_svg]:pixel-icon [&_svg]:size-6\",\n      image: \"size-12 overflow-hidden bg-lid-deep/60 [&_img]:size-full [&_img]:object-cover\",\n    },\n  },\n  defaultVariants: { variant: \"default\" },\n});\n\nexport const ItemMedia = ({\n  className,\n  variant,\n  ...props\n}: React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof itemMediaVariants>) => (\n  <div data-slot=\"item-media\" className={cn(itemMediaVariants({ variant }), className)} {...props} />\n);\n\nexport const ItemContent = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (\n  <div data-slot=\"item-content\" className={cn(\"flex min-w-0 flex-1 flex-col gap-0.5\", className)} {...p} />\n);\n\nexport const ItemTitle = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (\n  <div\n    data-slot=\"item-title\"\n    className={cn(\"flex items-center gap-2 text-lg font-extrabold leading-snug tracking-[-0.01em]\", className)}\n    {...p}\n  />\n);\n\nexport const ItemDescription = ({ className, ...p }: React.HTMLAttributes<HTMLParagraphElement>) => (\n  <p\n    data-slot=\"item-description\"\n    className={cn(\"line-clamp-2 text-base leading-normal opacity-80\", className)}\n    {...p}\n  />\n);\n\nexport const ItemActions = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (\n  <div data-slot=\"item-actions\" className={cn(\"flex shrink-0 items-center gap-3\", className)} {...p} />\n);\n",
+      "type": "registry:ui",
+      "target": "components/ui/item.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

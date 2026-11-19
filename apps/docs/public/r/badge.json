@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "badge",
+  "title": "Badge",
+  "description": "A tiny crooked sticker for a status that matters.",
+  "dependencies": [
+    "class-variance-authority@0.7.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/badge.tsx",
+      "content": "import * as React from \"react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/** Badge — a tiny sticker. Use sparingly: never \"a badge on every item\". */\nexport const badgeVariants = cva(\n  \"sticker crooked inline-flex h-8 items-center gap-1.5 px-3 text-sm font-extrabold leading-none [&_svg]:pixel-icon [&_svg]:size-4\",\n  {\n    variants: {\n      tone: {\n        paper: \"face-paper\",\n        pink: \"face-pink\",\n        lime: \"face-lime\",\n        sky: \"face-sky\",\n        tomato: \"face-tomato\",\n        butter: \"face-butter\",\n        ink: \"face-ink\",\n      },\n    },\n    defaultVariants: { tone: \"paper\" },\n  }\n);\n\nexport interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof badgeVariants> {\n  tilt?: number;\n}\n\nexport function Badge({ className, tone, tilt = -2, style, ...props }: BadgeProps) {\n  return (\n    <span\n      data-slot=\"badge\"\n      className={cn(badgeVariants({ tone }), className)}\n      style={{ [\"--p3d-tilt\" as string]: `${tilt}deg`, ...style }}\n      {...props}\n    />\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "components/ui/badge.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

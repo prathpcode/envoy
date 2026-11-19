@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "breadcrumb",
+  "title": "Breadcrumb",
+  "description": "The trail back home, with the current page stuck on as a small crooked pink sticker.",
+  "dependencies": [
+    "radix-ui@1.8.1",
+    "pixelarticons@2.4.2"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/breadcrumb.tsx",
+      "content": "import * as React from \"react\";\nimport { Slot } from \"radix-ui\";\nimport { ChevronRight, MoreHorizontal } from \"pixelarticons/react\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * Breadcrumb — ink links with a pink underline, pixel chevron separators, and the\n * current page stuck on as a small crooked pink sticker. Same API as shadcn.\n */\nexport const Breadcrumb = React.forwardRef<HTMLElement, React.ComponentPropsWithoutRef<\"nav\">>(\n  ({ \"aria-label\": label = \"Breadcrumb\", ...props }, ref) => (\n    <nav ref={ref} aria-label={label} data-slot=\"breadcrumb\" {...props} />\n  )\n);\nBreadcrumb.displayName = \"Breadcrumb\";\n\nexport const BreadcrumbList = React.forwardRef<HTMLOListElement, React.ComponentPropsWithoutRef<\"ol\">>(\n  ({ className, ...props }, ref) => (\n    <ol\n      ref={ref}\n      data-slot=\"breadcrumb-list\"\n      className={cn(\"flex flex-wrap items-center gap-x-2 gap-y-3 text-base text-on-lid\", className)}\n      {...props}\n    />\n  )\n);\nBreadcrumbList.displayName = \"BreadcrumbList\";\n\nexport const BreadcrumbItem = React.forwardRef<HTMLLIElement, React.ComponentPropsWithoutRef<\"li\">>(\n  ({ className, ...props }, ref) => (\n    <li ref={ref} data-slot=\"breadcrumb-item\" className={cn(\"inline-flex items-center gap-2\", className)} {...props} />\n  )\n);\nBreadcrumbItem.displayName = \"BreadcrumbItem\";\n\nexport const BreadcrumbLink = React.forwardRef<\n  HTMLAnchorElement,\n  React.ComponentPropsWithoutRef<\"a\"> & { asChild?: boolean }\n>(({ asChild, className, ...props }, ref) => {\n  const Comp = asChild ? Slot.Root : \"a\";\n  return (\n    <Comp\n      ref={ref}\n      data-slot=\"breadcrumb-link\"\n      className={cn(\n        \"font-semibold text-on-lid underline decoration-pink decoration-[3px] underline-offset-[5px] transition-colors hover:bg-pink hover:text-ink\",\n        className\n      )}\n      {...props}\n    />\n  );\n});\nBreadcrumbLink.displayName = \"BreadcrumbLink\";\n\nexport const BreadcrumbPage = React.forwardRef<\n  HTMLSpanElement,\n  React.ComponentPropsWithoutRef<\"span\"> & { tilt?: number }\n>(({ className, tilt = -2, style, ...props }, ref) => (\n  <span\n    ref={ref}\n    data-slot=\"breadcrumb-page\"\n    role=\"link\"\n    aria-disabled=\"true\"\n    aria-current=\"page\"\n    style={{ [\"--p3d-tilt\" as string]: `${tilt}deg`, ...style }}\n    className={cn(\"sticker crooked face-pink mx-1 inline-flex h-9 items-center px-3 font-extrabold\", className)}\n    {...props}\n  />\n));\nBreadcrumbPage.displayName = \"BreadcrumbPage\";\n\nexport const BreadcrumbSeparator = ({ children, className, ...props }: React.ComponentProps<\"li\">) => (\n  <li\n    data-slot=\"breadcrumb-separator\"\n    role=\"presentation\"\n    aria-hidden=\"true\"\n    className={cn(\"inline-flex text-on-lid-soft [&_svg]:pixel-icon [&_svg]:size-4\", className)}\n    {...props}\n  >\n    {children ?? <ChevronRight />}\n  </li>\n);\nBreadcrumbSeparator.displayName = \"BreadcrumbSeparator\";\n\nexport const BreadcrumbEllipsis = ({ className, ...props }: React.ComponentProps<\"span\">) => (\n  <span\n    data-slot=\"breadcrumb-ellipsis\"\n    role=\"presentation\"\n    aria-hidden=\"true\"\n    className={cn(\"inline-flex size-9 items-center justify-center text-on-lid-soft\", className)}\n    {...props}\n  >\n    <MoreHorizontal className=\"pixel-icon size-6\" />\n    <span className=\"sr-only\">More</span>\n  </span>\n);\nBreadcrumbEllipsis.displayName = \"BreadcrumbEllipsis\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/breadcrumb.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

@@ -1,0 +1,340 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>stanford iso</title>
+<style>
+@font-face{font-family:"Bricolage Grotesque Variable";src:url("./bricolage.woff2") format("woff2");font-weight:200 800;font-display:swap}
+html,body{margin:0;height:100%;background:#4f7a45;overflow:hidden}
+canvas{display:block;width:100vw;height:100vh;cursor:grab;touch-action:none}
+.bubble{position:fixed;transform:translate(-50%,-100%);max-width:240px;background:#fff;color:#141414;font:700 14px/1.3 "Bricolage Grotesque Variable",system-ui,sans-serif;
+  padding:8px 10px;box-shadow:0 0 0 3px #fff,0 6px 5px rgba(20,20,40,.28);pointer-events:none}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-11px;width:8px;height:8px;margin-left:-4px;background:#fff}
+.note{position:fixed;bottom:8px;background:rgba(255,255,255,.85);color:#4a4d55;font:700 14px/1 "Bricolage Grotesque Variable",system-ui,sans-serif;padding:6px 8px;pointer-events:none}
+</style>
+</head><body>
+<canvas id="c"></canvas><div id="overlay"></div>
+<script type="module">
+// Painted isometric campus: a pre-rendered tile pyramid (z6..z10, 512 px tiles, about 5 px per metre at z10) drawn on a
+// 2D canvas, with people standing on a walkable-ground mask derived from the painting itself.
+// World units are z10 pixels, origin at the top-left of the downloaded area. The camera faces east, so north is left.
+import { traits, maskTraits, drawChar, FOOT } from "./chars.js";
+
+const P = new URLSearchParams(location.search);
+const EMBED = P.get("embed") === "1";
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const meta = await (await fetch("./iso/meta.json")).json();
+const { C0, R0, NC, NR, zmin, zmax, fx, fy, geo, elev } = meta, T = meta.tile;
+const WW = NC * T, WH = NR * T;
+
+// ---- geography: lat/lon -> world px (the painting shifts a point up by its elevation) ----
+function elevAt(col, row) {
+  const x = Math.min(elev.w - 1, Math.max(0, Math.floor(col - elev.c0))), y = Math.min(elev.h - 1, Math.max(0, Math.floor(row - elev.r0)));
+  return elev.idx[y][x] * 4 * 0.85;       // cell means are surface heights (trees, roofs), so sit a little under them
+}
+function fromLatLon(lat, lon) {
+  const col = (geo.lat0 - lat) / geo.stepLat + 1, flat = (geo.lon0 - lon) / geo.stepLon + 1;
+  const row = flat - elevAt(col, flat - 0.28) / geo.mPerRow;
+  return [(col - C0) * T, (row - R0) * T];
+}
+
+// ---- walkable ground: 1 mask px = 4 world px ----
+const MS = 4, MW = WW / MS, MH = WH / MS;
+const mask = await new Promise((res) => {
+  const im = new Image(); im.onload = () => {
+    const c = new OffscreenCanvas(MW, MH), x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(im, 0, 0, MW, MH);
+    const d = x.getImageData(0, 0, MW, MH).data, m = new Uint8Array(MW * MH);
+    for (let i = 0; i < m.length; i++) m[i] = d[i * 4] > 127 ? 1 : 0; res(m);
+  }; im.src = "./iso/walk.png";
+});
+const walkable = (wx, wy) => { const x = Math.floor(wx / MS), y = Math.floor(wy / MS); return x >= 0 && y >= 0 && x < MW && y < MH && mask[y * MW + x] === 1; };
+function nearestWalkable(wx, wy) {
+  if (walkable(wx, wy)) return [wx, wy];
+  for (let r = 1; r < 260; r++) for (let k = 0; k < 8 * r; k++) {
+    const a = (k / (8 * r)) * 6.283, x = wx + Math.cos(a) * r * MS, y = wy + Math.sin(a) * r * MS;
+    if (walkable(x, y)) return [x, y];
+  }
+  return [wx, wy];
+}
+function clearLine(x0, y0, x1, y1) {
+  const d = Math.hypot(x1 - x0, y1 - y0), n = Math.ceil(d / 3);
+  for (let i = 1; i <= n; i++) if (!walkable(x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n)) return false;
+  return true;
+}
+
+// ---- view ----
+const cvs = document.getElementById("c"), ctx = cvs.getContext("2d"), overlay = document.getElementById("overlay");
+let VW = innerWidth, VH = innerHeight, DPR = Math.min(2, devicePixelRatio || 1);
+const sMin = () => Math.max(VW / WW, VH / WH) * 1.001, S_MAX = 2.5;
+const OX = VW > 900 ? +(P.get("ox") ?? 0) : 0;        // keep the focus clear of a HUD card on the left
+const start = fromLatLon(+(P.get("lat") ?? 37.4275), +(P.get("lon") ?? -122.1702));
+let s = Math.max(sMin(), +(P.get("s") ?? 0.6)), sTo = s, cx = start[0] - OX / 2 / s, cy = start[1];
+let anchor = null;                                     // { wx, wy, sx, sy } the world point pinned under the cursor while zooming
+function clampView() {
+  s = Math.min(S_MAX, Math.max(sMin(), s));
+  const hw = VW / 2 / s, hh = VH / 2 / s;
+  cx = Math.min(WW - hw, Math.max(hw, cx)); cy = Math.min(WH - hh, Math.max(hh, cy));
+}
+const toScreen = (wx, wy) => [(wx - cx) * s + VW / 2, (wy - cy) * s + VH / 2];
+const toWorld = (sx, sy) => [(sx - VW / 2) / s + cx, (sy - VH / 2) / s + cy];
+function resize() {
+  VW = innerWidth; VH = innerHeight; DPR = Math.min(2, devicePixelRatio || 1);
+  cvs.width = Math.round(VW * DPR); cvs.height = Math.round(VH * DPR); clampView();
+}
+
+// ---- tiles ----
+const GX = (C0 + fx) * T, GY = (R0 + fy) * T;          // world origin in the pyramid's global z10 pixels
+const tiles = new Map();
+function tile(z, x, y) {
+  const k = z + "/" + x + "/" + y; let t = tiles.get(k);
+  if (!t) {
+    const sh = zmax - z;
+    const ok = x >= ((C0 + fx) >> sh) && x <= ((C0 + NC - 1 + fx) >> sh) && y >= ((R0 + fy) >> sh) && y <= ((R0 + NR - 1 + fy) >> sh);
+    t = { im: null, ok: false, none: !ok };
+    if (ok) { t.im = new Image(); t.im.onload = () => { t.ok = true; dirty = true; }; t.im.onerror = () => { t.none = true; }; t.im.src = `./tiles/${k}.webp`; }
+    tiles.set(k, t);
+  }
+  return t;
+}
+let dirty = true;
+function drawTiles() {
+  const want = Math.min(zmax, Math.max(zmin, Math.ceil(zmax + Math.log2(s * DPR) - 0.2)));
+  ctx.imageSmoothingEnabled = s * DPR <= 1.02; ctx.imageSmoothingQuality = "high";
+  const [wx0, wy0] = toWorld(0, 0), [wx1, wy1] = toWorld(VW, VH);
+  const ts = T << (zmax - want);
+  const px = (wx) => Math.round(((wx - cx) * s + VW / 2) * DPR), py = (wy) => Math.round(((wy - cy) * s + VH / 2) * DPR);
+  for (let ty = Math.floor((wy0 + GY) / ts); ty <= Math.floor((wy1 + GY) / ts); ty++)
+    for (let tx = Math.floor((wx0 + GX) / ts); tx <= Math.floor((wx1 + GX) / ts); tx++) {
+      const X0 = px(tx * ts - GX), Y0 = py(ty * ts - GY), X1 = px((tx + 1) * ts - GX), Y1 = py((ty + 1) * ts - GY);
+      // the wanted tile, or the nearest loaded ancestor's matching quarter while it streams in
+      let z = want, x = tx, y = ty, t = tile(z, x, y);
+      while (!t.ok && z > zmin) { z--; x >>= 1; y >>= 1; t = tile(z, x, y); }
+      if (!t.ok) continue;
+      const k = 1 << (want - z), sz = T / k;
+      ctx.drawImage(t.im, (tx - x * k) * sz, (ty - y * k) * sz, sz, sz, X0, Y0, X1 - X0, Y1 - Y0);
+    }
+}
+// warm the whole-campus levels so there is always something to draw
+for (let z = zmin; z <= zmin + 1; z++) { const sh = zmax - z;
+  for (let x = (C0 + fx) >> sh; x <= (C0 + NC - 1 + fx) >> sh; x++) for (let y = (R0 + fy) >> sh; y <= (R0 + NR - 1 + fy) >> sh; y++) tile(z, x, y); }
+
+// ---- the network: people stand at their dorm or affiliation; an ask is a ring of masked envoys at a neutral spot ----
+// The map only draws what the app posts to it. The app only knows what the relay let this viewer see, so a masked
+// envoy here carries no identity at all: same grey figure for everyone, a letter instead of a name, and a meeting
+// spot that has nothing to do with where its owner lives.
+const PLACES = {
+  wilbur: [37.4243, -122.1630], stern: [37.4249, -122.1655], toyon: [37.4262, -122.1641], branner: [37.4255, -122.1622],
+  crothers: [37.4263, -122.1657], flomo: [37.4226, -122.1716], roble: [37.4257, -122.1748], lagunita: [37.4250, -122.1764],
+  gates: [37.4300, -122.1733], dschool: [37.4263, -122.1719], huang: [37.4279, -122.1743], tresidder: [37.4241, -122.1707],
+  green: [37.4268, -122.1679],
+};
+const SPOTS = { quad: [37.4275, -122.1702], oval: [37.4297, -122.1694], whiteplaza: [37.4247, -122.1699], meyer: [37.4258, -122.1676], engquad: [37.4285, -122.1742] };
+const INK = { talking: "#36b8ff", fit: "#b6f23a", nofit: "#bfc4cc", matched: "#b6f23a", revealed: "#b6f23a", link: "#b6f23a" };
+function rng(seed) { let a = seed >>> 0; return () => ((a = (a * 1664525 + 1013904223) >>> 0) / 4294967296); }
+const rnd = rng(20261119);
+const nodes = new Map();      // userId -> person standing at home
+const asks = new Map();       // askId -> { spot:[x,y], envoys: Map(alias -> token) }
+const edges = new Map();      // convId -> { askId, alias, state, pulses: [] }
+const links = [];             // confirmed connections between two home nodes: [idA, idB]
+let selected = null;
+
+function nearCapped(p, cap) { const q = nearestWalkable(p[0], p[1]); return Math.hypot(q[0] - p[0], q[1] - p[1]) <= cap ? q : p; }
+function token(name, x, y, t) {
+  return { name, x, y, tx: x, ty: y, hx: x, hy: y, vx: 0, vy: 0, t, born: performance.now(), speed: 0.7 + rnd() * 0.3, pause: 1 + rnd() * 4,
+    seed: rnd() * 10, cv: null, key: "", view: "front", flip: false, sx: 0, sy: 0 };
+}
+function addNode(u) {
+  if (nodes.has(u.id)) { Object.assign(nodes.get(u.id), { me: !!u.me, friend: !!u.friend }); return; }
+  const home = PLACES[u.place] ?? SPOTS.quad, n = [...nodes.values()].filter((q) => q.place === u.place).length;
+  const base = fromLatLon(home[0], home[1]), a = n * 2.4, r = n ? 40 + n * 16 : 0;     // housemates fan out instead of stacking
+  const p = nearCapped([base[0] + Math.cos(a) * r, base[1] + Math.sin(a) * r * 0.6], 600);
+  nodes.set(u.id, Object.assign(token(u.name, p[0], p[1], traits(u.name)), { id: u.id, place: u.place, me: !!u.me, friend: !!u.friend }));
+  dirty = true;
+}
+function addAsk(m) {
+  const had = asks.get(m.askId);
+  if (had) {
+    // a re-scored ask: latecomers stand on a wider ring
+    for (const cand of m.candidates ?? []) if (!had.envoys.has(cand.alias)) {
+      const a = had.envoys.size * 1.9, x = had.c[0] + Math.cos(a) * 400, y = had.c[1] + Math.sin(a) * 250;
+      had.envoys.set(cand.alias, Object.assign(token(cand.alias, x, y, maskTraits(false)), { alias: cand.alias, you: !!cand.you, masked: true, convId: cand.convId }));
+    }
+    return;
+  }
+  const c = fromLatLon(...(SPOTS[m.spot] ?? SPOTS.quad)), envoys = new Map(), list = m.candidates ?? [];
+  envoys.set("Asker", Object.assign(token("Asker", c[0], c[1], maskTraits(true)), { alias: "Asker", you: !!m.mine, masked: true }));
+  list.forEach((cand, i) => {
+    const a = -Math.PI / 2 + (i / list.length) * 6.283, x = c[0] + Math.cos(a) * 270, y = c[1] + Math.sin(a) * 175;
+    envoys.set(cand.alias, Object.assign(token(cand.alias, x, y, maskTraits(false)), { alias: cand.alias, you: !!cand.you, masked: true, convId: cand.convId }));
+  });
+  asks.set(m.askId, { c, envoys }); dirty = true;
+}
+function wander(b, dt) {
+  if (b.masked) return;
+  if (b.pause > 0) { b.pause -= dt; b.vx = b.vy = 0; return; }
+  const dx = b.tx - b.x, dy = b.ty - b.y, d = Math.hypot(dx, dy);
+  if (d < 1.5) {
+    b.pause = 2 + rnd() * 6; b.vx = b.vy = 0;
+    for (let k = 0; k < 8; k++) {
+      const a = rnd() * 6.283, L = 30 + rnd() * 90, x = b.x + Math.cos(a) * L, y = b.y + Math.sin(a) * L * 0.7;
+      if (Math.hypot(x - b.hx, y - b.hy) < 150 && clearLine(b.x, b.y, x, y)) { b.tx = x; b.ty = y; break; }
+    }
+    return;
+  }
+  const step = Math.min(d, 22 * b.speed * dt);
+  b.vx = dx / d; b.vy = dy / d; b.x += b.vx * step; b.y += b.vy * step;
+}
+
+const cellCss = () => (s >= 1 ? 3 : 2);
+const U = () => Math.round(DPR);                                   // one art pixel in device px
+function line(ax, ay, bx, by, color, dashOffset) {
+  // a sticker edge: white kiss-cut underlay, ink core; butt caps keep it pixel-plain
+  ctx.lineCap = "butt"; ctx.setLineDash([]);
+  ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 8 * U(); ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+  ctx.strokeStyle = "#141414"; ctx.lineWidth = 4 * U(); ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+  if (dashOffset !== null) { ctx.setLineDash([6 * U(), 6 * U()]); ctx.lineDashOffset = dashOffset; }
+  ctx.strokeStyle = color; ctx.lineWidth = 2 * U(); ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke(); ctx.setLineDash([]);
+}
+function ends(e) { const a = asks.get(e.askId); if (!a) return null; const p = a.envoys.get("Asker"), q = a.envoys.get(e.alias); return p && q ? [p, q] : null; }
+function drawEdges(now) {
+  const mid = (b) => [Math.round(((b.x - cx) * s + VW / 2) * DPR), Math.round(((b.y - cy) * s + VH / 2 - 9 * cellCss()) * DPR)];
+  for (const [a, b] of links) { const p = nodes.get(a), q = nodes.get(b); if (p && q) line(...mid(p), ...mid(q), INK.link, null); }
+  for (const e of edges.values()) {
+    const pq = ends(e); if (!pq) continue;
+    const [ax, ay] = mid(pq[0]), [bx, by] = mid(pq[1]); e.seg = [ax / DPR, ay / DPR, bx / DPR, by / DPR];
+    line(ax, ay, bx, by, INK[e.state] ?? INK.talking, e.state === "talking" && !reduceMotion ? -now / 40 : null);
+    // a message is a square riding the edge; a withheld one is grey
+    e.pulses = e.pulses.filter((p) => now - p.at < 700);
+    for (const p of e.pulses) {
+      const k = (now - p.at) / 700, t = p.fromAsker ? k : 1 - k, r = 4 * U();
+      const x = Math.round(ax + (bx - ax) * t), y = Math.round(ay + (by - ay) * t);
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(x - r - U() * 2, y - r - U() * 2, (r + U() * 2) * 2, (r + U() * 2) * 2);
+      ctx.fillStyle = p.withheld ? "#8a8f9a" : "#141414"; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+  }
+}
+function drawToken(b, now) {
+  const cell = cellCss() * Math.round(DPR), w = FOOT.w * cell, h = FOOT.h * cell;
+  let view = "front", flip = false, frame = -1;
+  if (Math.hypot(b.vx, b.vy) > 0.01) {
+    if (Math.abs(b.vx) > Math.abs(b.vy) * 1.2) { view = "side"; flip = b.vx < 0; } else view = b.vy < 0 ? "back" : "front";
+    frame = reduceMotion ? 0 : Math.floor(now / 125) % 4;
+  }
+  const talking = b.masked && [...edges.values()].some((e) => e.state === "talking" && (b.alias === "Asker" ? asks.get(e.askId)?.envoys.get("Asker") === b : e.alias === b.alias && ends(e)?.[1] === b));
+  if (talking && !reduceMotion && Math.floor((now + b.seed * 500) / 380) % 2 === 0) frame = -2;
+  const blink = frame === -1 && ((now / 1000 + b.seed) % 3.6) < 0.14;
+  const key = [view, flip, frame, blink, cell].join("|");
+  if (key !== b.key) {
+    if (!b.cv || b.cv.width !== w) b.cv = new OffscreenCanvas(w, h);
+    drawChar(b.cv.getContext("2d"), b.t, { view, flip, frame, talk: frame === -2, blink }, cell); b.key = key;
+  }
+  [b.sx, b.sy] = toScreen(b.x, b.y);
+  if (b.sx < -60 || b.sy < -20 || b.sx > VW + 60 || b.sy > VH + 90) return;
+  const age = (now - b.born) / 320, slap = reduceMotion || age >= 1 ? 1 : 1 + 0.4 * (1 - age);
+  const dw = Math.round(w * slap), dh = Math.round(h * slap), u = 2 * U();
+  const X = Math.round(b.sx * DPR), Y = Math.round(b.sy * DPR);
+  if (b.friend) { ctx.fillStyle = "#ffffff"; ctx.fillRect(X - 9 * u, Y - 2 * u, 18 * u, 5 * u); ctx.fillStyle = "#b6f23a"; ctx.fillRect(X - 8 * u, Y - u, 16 * u, 3 * u); }
+  ctx.drawImage(b.cv, Math.round(X - dw / 2), Math.round(Y - dh * (1 - 2 / FOOT.h)), dw, dh);
+  const top = Y - dh;
+  if (b.masked) {
+    // the alias is all anyone gets: a letter on a paper chip
+    const label = b.alias === "Asker" ? (b.you ? "You" : "?") : b.you ? "You" : b.alias;
+    ctx.font = `800 ${14 * DPR}px "Bricolage Grotesque Variable", system-ui, sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const tw = Math.max(22 * DPR, ctx.measureText(label).width + 12 * DPR), th = 22 * DPR;
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(Math.round(X - tw / 2) - u, top - th - u, tw + 2 * u, th + 2 * u);
+    ctx.fillStyle = b.you ? "#141414" : "#ffffff"; ctx.fillRect(Math.round(X - tw / 2), top - th, tw, th);
+    ctx.fillStyle = b.you ? "#ffffff" : "#141414"; ctx.fillText(label, X, top - th / 2 + DPR);
+  } else if (b.me || b.id === selected) {
+    const bob = reduceMotion ? 0 : Math.round(Math.sin(now / 260) * 1.5) * u, ay = top - 2 * u + bob;
+    for (const [col, pad] of [["#ffffff", u], [b.me ? "#141414" : "#36b8ff", 0]])
+      for (let r = 0; r < 4; r++) { ctx.fillStyle = col; ctx.fillRect(X - (4 - r) * u - pad, ay - (4 - r) * u - pad, (4 - r) * 2 * u + pad * 2, u + pad * 2); }
+  }
+}
+function drawBots(now) {
+  ctx.imageSmoothingEnabled = false;
+  drawEdges(now);
+  const all = [...nodes.values()]; for (const a of asks.values()) all.push(...a.envoys.values());
+  for (const b of all.sort((a, c) => a.y - c.y)) drawToken(b, now);
+}
+
+// ---- loop ----
+let focusTo = null, last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (Math.abs(sTo - s) > 0.0005) {
+    s += (sTo - s) * (reduceMotion ? 1 : 0.22);
+    if (anchor) { cx = anchor.wx - (anchor.sx - VW / 2) / s; cy = anchor.wy - (anchor.sy - VH / 2) / s; }
+    clampView(); dirty = true;
+  }
+  if (focusTo) {
+    const k = reduceMotion ? 1 : 0.12; cx += (focusTo[0] - cx) * k; cy += (focusTo[1] - cy) * k; clampView(); dirty = true;
+    if (Math.hypot(focusTo[0] - cx, focusTo[1] - cy) < 1 || k === 1) focusTo = null;
+  }
+  if (!reduceMotion) for (const b of nodes.values()) wander(b, dt);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = "#4f7a45"; ctx.fillRect(0, 0, cvs.width, cvs.height); drawTiles(); drawBots(now); dirty = false;
+  requestAnimationFrame(loop);
+}
+function flyTo(x, y, zoom) { anchor = null; if (zoom && sTo < zoom) sTo = zoom; focusTo = [x - OX / 2 / Math.max(s, sTo), y]; }
+
+// ---- messages from the app ----
+addEventListener("message", (e) => {
+  const m = e.data || {};
+  if (m.type === "envoy:hello") parent.postMessage({ type: "envoy:ready" }, "*");
+  if (m.type === "envoy:nodes") m.nodes.forEach(addNode);
+  if (m.type === "envoy:ask") { addAsk(m); if (m.fly) flyTo(...asks.get(m.askId).c, 0.75); }
+  if (m.type === "envoy:edge") { const e0 = edges.get(m.convId); if (e0) e0.state = m.state; else edges.set(m.convId, { askId: m.askId, alias: m.alias, state: m.state, pulses: [] }); }
+  if (m.type === "envoy:pulse") edges.get(m.convId)?.pulses.push({ at: performance.now(), fromAsker: m.fromAsker, withheld: m.withheld });
+  if (m.type === "envoy:link") { if (!links.some(([a, b]) => a === m.a && b === m.b)) links.push([m.a, m.b]); for (const id of [m.a, m.b]) { const n = nodes.get(id); if (n && !n.me) n.friend = true; } }
+  if (m.type === "envoy:clearAsk") { asks.delete(m.askId); for (const [k, v] of edges) if (v.askId === m.askId) edges.delete(k); }
+  if (m.type === "envoy:focus") {
+    const n = m.id ? nodes.get(m.id) : null, a = m.askId ? asks.get(m.askId) : null;
+    if (n) { selected = n.id; flyTo(n.x, n.y, 0.8); } else if (a) flyTo(a.c[0], a.c[1], 0.75);
+  }
+  if (m.type === "envoy:reset") { nodes.clear(); asks.clear(); edges.clear(); links.length = 0; selected = null; }
+});
+
+// ---- interaction: drag pans, wheel or pinch zooms toward the cursor, a tap picks a bot ----
+const ptr = new Map(); let downAt = null, pinch = 0;
+function zoomAt(sx, sy, next) { const [wx, wy] = toWorld(sx, sy); anchor = { wx, wy, sx, sy }; sTo = Math.min(S_MAX, Math.max(sMin(), next)); focusTo = null; }
+cvs.addEventListener("wheel", (e) => { e.preventDefault(); zoomAt(e.clientX, e.clientY, sTo * Math.exp(-e.deltaY * (e.ctrlKey ? 0.012 : 0.0016))); }, { passive: false });
+cvs.addEventListener("pointerdown", (e) => { ptr.set(e.pointerId, [e.clientX, e.clientY]); cvs.setPointerCapture(e.pointerId); downAt = [e.clientX, e.clientY]; cvs.style.cursor = "grabbing"; focusTo = null; pinch = 0; });
+cvs.addEventListener("pointermove", (e) => {
+  const p = ptr.get(e.pointerId); if (!p) return;
+  if (ptr.size === 1) { cx -= (e.clientX - p[0]) / s; cy -= (e.clientY - p[1]) / s; anchor = null; sTo = s; clampView(); dirty = true; }
+  ptr.set(e.pointerId, [e.clientX, e.clientY]);
+  if (ptr.size === 2) {
+    const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+    if (pinch) { zoomAt((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, s * d / pinch); s = sTo; cx = anchor.wx - (anchor.sx - VW / 2) / s; cy = anchor.wy - (anchor.sy - VH / 2) / s; clampView(); dirty = true; }
+    pinch = d;
+  }
+});
+const up = (e) => {
+  ptr.delete(e.pointerId); pinch = 0; if (!ptr.size) cvs.style.cursor = "grab";
+  if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 5) {
+    const px = e.clientX, py = e.clientY; let hit = null, hd = 14;
+    for (const [id, ed] of edges) if (ed.seg) {
+      const [ax, ay, bx, by] = ed.seg, L = Math.hypot(bx - ax, by - ay) || 1, t = Math.max(0, Math.min(1, ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / (L * L)));
+      const d = Math.hypot(ax + (bx - ax) * t - px, ay + (by - ay) * t - py); if (d < hd) { hd = d; hit = id; }
+    }
+    let best = null, bd = 30;
+    for (const a of asks.values()) for (const b of a.envoys.values()) if (b.convId) { const d = Math.hypot(b.sx - px, b.sy - 20 - py); if (d < bd) { bd = d; best = b; hit = b.convId; } }
+    if (hit) parent.postMessage({ type: "envoy:tapEdge", convId: hit }, "*");
+    else {
+      for (const b of nodes.values()) { const d = Math.hypot(b.sx - px, b.sy - 20 - py); if (d < bd) { bd = d; best = b; } }
+      selected = best ? best.id : null;
+      parent.postMessage({ type: "envoy:tapNode", id: selected }, "*");
+    }
+  }
+  downAt = null;
+};
+cvs.addEventListener("pointerup", up); cvs.addEventListener("pointercancel", up);
+addEventListener("resize", () => { resize(); dirty = true; });
+
+const note = document.createElement("div"); note.className = "note";
+if (EMBED) { note.textContent = "sample people"; note.style.right = "8px"; }
+else { note.textContent = "drag to pan · scroll to zoom"; note.style.left = "8px"; }
+document.body.appendChild(note);
+
+resize();
+document.title = "ready";
+requestAnimationFrame(loop);
+parent.postMessage({ type: "envoy:ready" }, "*");
+</script>
+</body></html>

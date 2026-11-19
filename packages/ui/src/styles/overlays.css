@@ -1,0 +1,119 @@
+/* pixel3d-ui — overlays group styles (component-specific keyframes/utilities). */
+
+/* ── keyframes ─────────────────────────────────────────────── */
+@keyframes p3d-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes p3d-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+/* a big sticker slapped onto the screen: drops in a little crooked, settles straight */
+@keyframes p3d-slap-in {
+  0% { transform: translateY(-28px) rotate(-4deg) scale(1.08); opacity: 0; }
+  55% { transform: translateY(3px) rotate(0.8deg) scale(0.985); opacity: 1; }
+  100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+}
+/* sheets slide in from their edge with a small settle */
+@keyframes p3d-sheet-in-right {
+  from { transform: translateX(calc(100% + 32px)) rotate(2deg); }
+  to { transform: none; }
+}
+@keyframes p3d-sheet-out-right {
+  to { transform: translateX(calc(100% + 32px)) rotate(2deg); }
+}
+@keyframes p3d-sheet-in-left {
+  from { transform: translateX(calc(-100% - 32px)) rotate(-2deg); }
+  to { transform: none; }
+}
+@keyframes p3d-sheet-out-left {
+  to { transform: translateX(calc(-100% - 32px)) rotate(-2deg); }
+}
+@keyframes p3d-sheet-in-top {
+  from { transform: translateY(calc(-100% - 32px)) rotate(-1deg); }
+  to { transform: none; }
+}
+@keyframes p3d-sheet-out-top {
+  to { transform: translateY(calc(-100% - 32px)) rotate(-1deg); }
+}
+@keyframes p3d-sheet-in-bottom {
+  from { transform: translateY(calc(100% + 32px)) rotate(1deg); }
+  to { transform: none; }
+}
+@keyframes p3d-sheet-out-bottom {
+  to { transform: translateY(calc(100% + 32px)) rotate(1deg); }
+}
+/* toasts: a crooked sticker dropped onto the lid with a stepped (pixel) bounce.
+   Uses the individual translate/rotate properties so it composes with sonner's transform. */
+@keyframes p3d-toast-drop {
+  0% { translate: 0 -40px; rotate: -10deg; opacity: 0; }
+  35% { translate: 0 6px; rotate: var(--p3d-tilt, 0deg); opacity: 1; }
+  55% { translate: 0 -8px; }
+  75% { translate: 0 2px; }
+  88% { translate: 0 -2px; }
+  100% { translate: 0 0; rotate: var(--p3d-tilt, 0deg); opacity: 1; }
+}
+
+/* ── utilities ─────────────────────────────────────────────── */
+/* ink overlay behind dialogs / sheets */
+@utility overlay-fade {
+  &[data-state="open"] { animation: p3d-fade-in 240ms var(--ease-out-expo) both; }
+  &[data-state="closed"] { animation: p3d-fade-out 160ms ease-in both; }
+}
+
+/* dialog / alert-dialog content */
+@utility dialog-motion {
+  &[data-state="open"] { animation: p3d-slap-in 420ms var(--ease-out-expo) both; }
+  &[data-state="closed"] { animation: p3d-lift-out 180ms ease-in both; }
+}
+
+/* sheet content; reads data-side="top|right|bottom|left" */
+@utility sheet-motion {
+  &[data-side="right"][data-state="open"] { animation: p3d-sheet-in-right 460ms var(--ease-out-expo) both; }
+  &[data-side="right"][data-state="closed"] { animation: p3d-sheet-out-right 220ms ease-in both; }
+  &[data-side="left"][data-state="open"] { animation: p3d-sheet-in-left 460ms var(--ease-out-expo) both; }
+  &[data-side="left"][data-state="closed"] { animation: p3d-sheet-out-left 220ms ease-in both; }
+  &[data-side="top"][data-state="open"] { animation: p3d-sheet-in-top 460ms var(--ease-out-expo) both; }
+  &[data-side="top"][data-state="closed"] { animation: p3d-sheet-out-top 220ms ease-in both; }
+  &[data-side="bottom"][data-state="open"] { animation: p3d-sheet-in-bottom 460ms var(--ease-out-expo) both; }
+  &[data-side="bottom"][data-state="closed"] { animation: p3d-sheet-out-bottom 220ms ease-in both; }
+}
+
+/* Radix Tooltip uses delayed-open / instant-open instead of open */
+@utility tooltip-motion {
+  &[data-state="delayed-open"], &[data-state="instant-open"] {
+    animation: p3d-drop-in 220ms var(--ease-out-expo) both;
+  }
+  &[data-state="closed"] { animation: p3d-lift-out 120ms ease-in both; }
+}
+
+/* A flat pixel block with 1-step notched corners, painted with --fill (no pseudo-elements).
+   Menu / command highlights, key caps, and the toast face. */
+@utility notch-fill {
+  background:
+    linear-gradient(var(--fill, transparent), var(--fill, transparent)) center / calc(100% - 8px) 100% no-repeat,
+    linear-gradient(var(--fill, transparent), var(--fill, transparent)) center / 100% calc(100% - 8px) no-repeat;
+}
+
+/* The toast sticker. Sonner owns ::before/::after (swipe hit areas), position and transform,
+   so the face is painted with background layers and the tilt uses the `rotate` property. */
+@utility toast-sticker {
+  --p3d-sh: 0 6px 5px rgb(var(--p3d-shadow) / 0.28);
+  --fill: var(--face, var(--color-paper));
+  background:
+    linear-gradient(var(--fill), var(--fill)) center / calc(100% - 8px) 100% no-repeat,
+    linear-gradient(var(--fill), var(--fill)) center / 100% calc(100% - 8px) no-repeat;
+  filter:
+    drop-shadow(4px 0 0 var(--p3d-cut)) drop-shadow(-4px 0 0 var(--p3d-cut))
+    drop-shadow(0 4px 0 var(--p3d-cut)) drop-shadow(0 -4px 0 var(--p3d-cut))
+    drop-shadow(var(--p3d-sh));
+  rotate: var(--p3d-tilt, 0deg);
+  animation: p3d-toast-drop 560ms steps(4, end) backwards;
+}
+
+/* Unlayered on purpose: beats sonner's injected (unlayered) slide-from-edge start, so the
+   toast drops in with our bounce instead of also sliding 100% from the edge. */
+[data-sonner-toast][data-mounted="false"].toast-sticker {
+  --y: translateY(0);
+}

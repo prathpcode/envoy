@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "marquee",
+  "title": "Marquee",
+  "description": "An endless row of crooked stickers scrolling across the lid, pausing when you hover or focus it.",
+  "dependencies": [],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/marquee.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * Marquee — an endless row of crooked stickers (your children: Badges, PixelAvatars, logos).\n * It pauses on hover and keyboard focus. Under reduced motion it stands still and wraps\n * into a static, centred cluster instead.\n *\n *   <Marquee speed={40}>\n *     <Badge tone=\"pink\">Ship it</Badge>\n *     <Badge tone=\"lime\">Demo day</Badge>\n *   </Marquee>\n */\nexport interface MarqueeProps extends React.HTMLAttributes<HTMLDivElement> {\n  /** Pixels per second. */\n  speed?: number;\n  direction?: \"left\" | \"right\";\n  pauseOnHover?: boolean;\n  /** Gap between stickers in px (keep ≥ 12 so kiss-cuts don't touch). */\n  gap?: number;\n}\n\nexport const Marquee = React.forwardRef<HTMLDivElement, MarqueeProps>(\n  ({ speed = 40, direction = \"left\", pauseOnHover = true, gap = 24, className, style, children, ...props }, ref) => {\n    const copy = React.useRef<HTMLDivElement>(null);\n    const [duration, setDuration] = React.useState<number | null>(null);\n\n    React.useEffect(() => {\n      const el = copy.current;\n      if (!el) return;\n      const measure = () => setDuration(Math.max(4, el.offsetWidth / Math.max(1, speed)));\n      measure();\n      const ro = new ResizeObserver(measure);\n      ro.observe(el);\n      return () => ro.disconnect();\n    }, [speed]);\n\n    const items = (\n      <div\n        className=\"flex shrink-0 items-center motion-reduce:w-full motion-reduce:shrink motion-reduce:flex-wrap motion-reduce:justify-center motion-reduce:pr-0!\"\n        style={{ gap, paddingRight: gap }}\n      >\n        {children}\n      </div>\n    );\n\n    return (\n      <div\n        ref={ref}\n        data-slot=\"marquee\"\n        className={cn(\"relative w-full overflow-hidden py-5\", pauseOnHover && \"marquee-pause\", className)}\n        style={style}\n        {...props}\n      >\n        <div\n          className={cn(\n            \"flex w-max\",\n            duration !== null && \"marquee-track\",\n            \"motion-reduce:w-full motion-reduce:flex-wrap motion-reduce:justify-center\"\n          )}\n          style={{\n            [\"--p3d-marquee-duration\" as string]: `${duration ?? 30}s`,\n            [\"--p3d-marquee-direction\" as string]: direction === \"right\" ? \"reverse\" : \"normal\",\n          }}\n        >\n          <div ref={copy} className=\"flex shrink-0 motion-reduce:w-full motion-reduce:shrink\">\n            {items}\n          </div>\n          <div aria-hidden inert className=\"flex shrink-0 motion-reduce:hidden\">\n            {items}\n          </div>\n        </div>\n      </div>\n    );\n  }\n);\nMarquee.displayName = \"Marquee\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/marquee.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

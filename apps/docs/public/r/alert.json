@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "alert",
+  "title": "Alert",
+  "description": "A straight sticker with a pixel icon, whose ink says what kind of news it is.",
+  "dependencies": [
+    "class-variance-authority@0.7.1",
+    "pixelarticons@2.4.2"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/alert.tsx",
+      "content": "import * as React from \"react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { Check, InfoBox, SquareAlert, WarningDiamond } from \"pixelarticons/react\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * Alert — a straight sticker with a leading pixel icon. The face carries the meaning:\n * info = sky, success = lime, warning = butter, destructive = tomato, default = paper.\n * One title, one line. Pass `icon` to swap the pixel icon, or icon={false} to drop it.\n *\n *   <Alert variant=\"warning\"><AlertTitle>Submissions close at 09:00</AlertTitle></Alert>\n */\nexport const alertVariants = cva(\"sticker sticker-lg flex w-full items-start gap-4 px-6 py-5 text-ink\", {\n  variants: {\n    variant: {\n      default: \"face-paper\",\n      info: \"face-sky\",\n      success: \"face-lime\",\n      warning: \"face-butter\",\n      destructive: \"face-tomato\",\n    },\n  },\n  defaultVariants: { variant: \"default\" },\n});\n\nconst icons = {\n  default: InfoBox,\n  info: InfoBox,\n  success: Check,\n  warning: WarningDiamond,\n  destructive: SquareAlert,\n} as const;\n\nexport interface AlertProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {\n  /** Replace the pixel icon, or false for none. */\n  icon?: React.ReactNode | false;\n}\n\nexport const Alert = React.forwardRef<HTMLDivElement, AlertProps>(\n  ({ className, variant, icon, role, children, ...props }, ref) => {\n    const v = variant ?? \"default\";\n    const Icon = icons[v];\n    return (\n      <div\n        ref={ref}\n        data-slot=\"alert\"\n        data-variant={v}\n        role={role ?? (v === \"destructive\" || v === \"warning\" ? \"alert\" : \"status\")}\n        className={cn(alertVariants({ variant }), className)}\n        {...props}\n      >\n        {icon === false ? null : (\n          <span aria-hidden className=\"mt-0.5 flex shrink-0 [&_svg]:pixel-icon [&_svg]:size-6\">\n            {icon ?? <Icon />}\n          </span>\n        )}\n        <div className=\"flex min-w-0 flex-1 flex-col gap-1\">{children}</div>\n      </div>\n    );\n  }\n);\nAlert.displayName = \"Alert\";\n\nexport const AlertTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(\n  ({ className, ...props }, ref) => (\n    <h5\n      ref={ref}\n      data-slot=\"alert-title\"\n      className={cn(\"text-lg font-extrabold leading-snug tracking-[-0.01em]\", className)}\n      {...props}\n    />\n  )\n);\nAlertTitle.displayName = \"AlertTitle\";\n\nexport const AlertDescription = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(\n  ({ className, ...props }, ref) => (\n    <div\n      ref={ref}\n      data-slot=\"alert-description\"\n      className={cn(\"text-base font-medium leading-relaxed\", className)}\n      {...props}\n    />\n  )\n);\nAlertDescription.displayName = \"AlertDescription\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/alert.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

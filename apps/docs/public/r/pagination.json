@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "pagination",
+  "title": "Pagination",
+  "description": "Pages as small square stickers; the one you're on is lime and pressed flat.",
+  "dependencies": [
+    "pixelarticons@2.4.2"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/pagination.tsx",
+      "content": "\"use client\";\r\nimport * as React from \"react\";\r\nimport { ArrowLeft, ArrowRight, MoreHorizontal } from \"pixelarticons/react\";\r\nimport { cn, useTilt } from \"@/lib/pixel3d\";\r\n\r\n/**\r\n * Pagination — every page is a small square paper sticker that peels; the current page\r\n * is lime, straight and pressed flat. Prev/next carry pixel arrows. Same API as shadcn.\r\n */\r\nexport const Pagination = ({ className, ...props }: React.ComponentProps<\"nav\">) => (\r\n  <nav\r\n    role=\"navigation\"\r\n    aria-label=\"Pagination\"\r\n    data-slot=\"pagination\"\r\n    className={cn(\"mx-auto flex w-full justify-center\", className)}\r\n    {...props}\r\n  />\r\n);\r\nPagination.displayName = \"Pagination\";\r\n\r\nexport const PaginationContent = React.forwardRef<HTMLUListElement, React.ComponentProps<\"ul\">>(\r\n  ({ className, ...props }, ref) => (\r\n    <ul\r\n      ref={ref}\r\n      data-slot=\"pagination-content\"\r\n      className={cn(\"flex flex-wrap items-center gap-3\", className)}\r\n      {...props}\r\n    />\r\n  )\r\n);\r\nPaginationContent.displayName = \"PaginationContent\";\r\n\r\nexport const PaginationItem = React.forwardRef<HTMLLIElement, React.ComponentProps<\"li\">>((props, ref) => (\r\n  <li ref={ref} data-slot=\"pagination-item\" {...props} />\r\n));\r\nPaginationItem.displayName = \"PaginationItem\";\r\n\r\nexport type PaginationLinkProps = {\r\n  isActive?: boolean;\r\n  size?: \"icon\" | \"default\";\r\n} & React.ComponentProps<\"a\">;\r\n\r\nexport const PaginationLink = ({ className, isActive, size = \"icon\", style, ...props }: PaginationLinkProps) => {\r\n  const tilt = useTilt(isActive ? false : \"auto\", 2);\r\n  return (\r\n    <a\r\n      aria-current={isActive ? \"page\" : undefined}\r\n      data-slot=\"pagination-link\"\r\n      data-active={isActive || undefined}\r\n      style={{ ...tilt, ...style }}\r\n      className={cn(\r\n        \"sticker sticker-disabled focus-cut inline-flex h-11 cursor-pointer select-none items-center justify-center gap-2 text-[17px] font-extrabold tabular-nums [&_svg]:pixel-icon [&_svg]:size-5\",\r\n        size === \"icon\" ? \"w-11\" : \"px-4\",\r\n        isActive ? \"face-lime sticker-flat\" : \"face-paper peel\",\r\n        className\r\n      )}\r\n      {...props}\r\n    />\r\n  );\r\n};\r\nPaginationLink.displayName = \"PaginationLink\";\r\n\r\nexport const PaginationPrevious = ({ className, children, ...props }: React.ComponentProps<typeof PaginationLink>) => (\r\n  <PaginationLink aria-label={children ? undefined : \"Go to previous page\"} size=\"default\" className={className} {...props}>\r\n    <ArrowLeft aria-hidden />\r\n    <span className=\"max-sm:sr-only\">{children ?? \"Prev\"}</span>\r\n  </PaginationLink>\r\n);\r\nPaginationPrevious.displayName = \"PaginationPrevious\";\r\n\r\nexport const PaginationNext = ({ className, children, ...props }: React.ComponentProps<typeof PaginationLink>) => (\r\n  <PaginationLink aria-label={children ? undefined : \"Go to next page\"} size=\"default\" className={className} {...props}>\r\n    <span className=\"max-sm:sr-only\">{children ?? \"Next\"}</span>\r\n    <ArrowRight aria-hidden />\r\n  </PaginationLink>\r\n);\r\nPaginationNext.displayName = \"PaginationNext\";\r\n\r\nexport const PaginationEllipsis = ({ className, ...props }: React.ComponentProps<\"span\">) => (\r\n  <span\r\n    aria-hidden\r\n    data-slot=\"pagination-ellipsis\"\r\n    className={cn(\"flex size-11 items-center justify-center text-on-lid-soft\", className)}\r\n    {...props}\r\n  >\r\n    <MoreHorizontal className=\"pixel-icon size-6\" />\r\n    <span className=\"sr-only\">More pages</span>\r\n  </span>\r\n);\r\nPaginationEllipsis.displayName = \"PaginationEllipsis\";\r\n",
+      "type": "registry:ui",
+      "target": "components/ui/pagination.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

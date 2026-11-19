@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "resizable",
+  "title": "Resizable",
+  "description": "Panels you drag apart by a little ink grip sticker.",
+  "dependencies": [
+    "react-resizable-panels@4.24.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/resizable.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { Group, Panel, Separator as ResizeSeparator } from \"react-resizable-panels\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * Resizable — panels split by a dotted pixel rule. `withHandle` adds a small ink grip\n * sticker that lifts on hover and slaps while dragging. Built on react-resizable-panels v4.\n */\nexport const ResizablePanelGroup = ({\n  className,\n  style,\n  ...props\n}: React.ComponentProps<typeof Group>) => (\n  <Group\n    data-slot=\"resizable-panel-group\"\n    className={cn(\"size-full\", className)}\n    // the grip sticker's kiss-cut and shadow sit slightly outside the separator\n    style={{ overflow: \"visible\", ...style }}\n    {...props}\n  />\n);\nResizablePanelGroup.displayName = \"ResizablePanelGroup\";\n\nexport const ResizablePanel = (props: React.ComponentProps<typeof Panel>) => (\n  <Panel data-slot=\"resizable-panel\" {...props} />\n);\nResizablePanel.displayName = \"ResizablePanel\";\n\n/** 2 × 3 pixel grip dots */\nfunction GripDots({ vertical }: { vertical: boolean }) {\n  const dots = [0, 1, 2].flatMap((i) => [0, 1].map((j) => (vertical ? [i * 4, j * 4] : [j * 4, i * 4])));\n  return (\n    <svg\n      viewBox={vertical ? \"0 0 10 6\" : \"0 0 6 10\"}\n      width={vertical ? 20 : 12}\n      height={vertical ? 12 : 20}\n      aria-hidden\n      className=\"pixel-icon fill-current\"\n    >\n      {dots.map(([x, y]) => (\n        <rect key={`${x}-${y}`} x={x} y={y} width=\"2\" height=\"2\" />\n      ))}\n    </svg>\n  );\n}\n\nexport const ResizableHandle = ({\n  withHandle,\n  className,\n  ...props\n}: React.ComponentProps<typeof ResizeSeparator> & { withHandle?: boolean }) => (\n  <ResizeSeparator\n    data-slot=\"resizable-handle\"\n    className={cn(\n      \"group/handle relative z-10 flex w-3 shrink-0 items-center justify-center text-ink outline-none\",\n      // a horizontal group has vertical separators, and vice versa\n      \"aria-[orientation=horizontal]:h-3 aria-[orientation=horizontal]:w-full\",\n      \"[&[aria-orientation=vertical]>i]:pixel-rule-y [&[aria-orientation=vertical]>i]:h-full\",\n      \"[&[aria-orientation=horizontal]>i]:pixel-rule [&[aria-orientation=horizontal]>i]:w-full\",\n      className\n    )}\n    {...props}\n  >\n    <i aria-hidden className=\"absolute opacity-40\" />\n    {withHandle && (\n      <span\n        data-slot=\"resizable-grip\"\n        className={cn(\n          \"sticker face-ink relative grid place-items-center transition-[transform,filter] duration-[260ms] ease-peel\",\n          \"h-10 w-6 group-aria-[orientation=horizontal]/handle:h-6 group-aria-[orientation=horizontal]/handle:w-10\",\n          \"group-hover/handle:-translate-y-0.5 group-hover/handle:scale-105 group-hover/handle:[--p3d-sh:0_10px_10px_rgb(var(--p3d-shadow)/0.24)]\",\n          \"group-data-[separator=active]/handle:scale-95 group-data-[separator=active]/handle:[--p3d-sh:0_2px_2px_rgb(var(--p3d-shadow)/0.3)]\",\n          \"group-data-[separator=focus]/handle:[--p3d-cut:var(--color-sky)] group-focus-visible/handle:[--p3d-cut:var(--color-sky)]\"\n        )}\n      >\n        <GripVariant />\n      </span>\n    )}\n  </ResizeSeparator>\n);\nResizableHandle.displayName = \"ResizableHandle\";\n\n/** Picks the grip orientation from the surrounding separator via CSS (no context needed). */\nfunction GripVariant() {\n  return (\n    <>\n      <span className=\"contents group-aria-[orientation=horizontal]/handle:hidden\">\n        <GripDots vertical={false} />\n      </span>\n      <span className=\"hidden group-aria-[orientation=horizontal]/handle:contents\">\n        <GripDots vertical />\n      </span>\n    </>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "components/ui/resizable.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

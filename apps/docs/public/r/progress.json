@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "progress",
+  "title": "Progress",
+  "description": "A pixel XP bar: a paper track that fills with pink blocks, one 8px block at a time.",
+  "dependencies": [
+    "radix-ui@1.8.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/progress.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { Progress as ProgressPrimitive } from \"radix-ui\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * Progress — a pixel XP bar. The track is a straight paper sticker; the fill is pink\n * 8px blocks that arrive one block at a time. Pass value={null} for an indeterminate\n * scanner. Label it (aria-label or aria-labelledby).\n *\n *   <Progress value={64} aria-label=\"Uploading demo video\" />\n */\nexport const Progress = React.forwardRef<\n  React.ComponentRef<typeof ProgressPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>\n>(({ className, value, max = 100, ...props }, ref) => {\n  const indeterminate = value == null;\n  const pct = indeterminate ? 0 : Math.max(0, Math.min(100, (value / (max || 100)) * 100));\n  return (\n    <ProgressPrimitive.Root\n      ref={ref}\n      data-slot=\"progress\"\n      value={value}\n      max={max}\n      className={cn(\"sticker face-paper flex h-8 w-full p-2\", className)}\n      {...props}\n    >\n      {/* inner clip box: the sticker itself must never get overflow-hidden */}\n      <div className=\"flex h-full w-full overflow-hidden\">\n        <ProgressPrimitive.Indicator\n          data-slot=\"progress-indicator\"\n          className={indeterminate ? \"xp-scan\" : \"xp-fill\"}\n          style={indeterminate ? undefined : { [\"--p3d-pv\" as string]: pct }}\n        />\n      </div>\n    </ProgressPrimitive.Root>\n  );\n});\nProgress.displayName = \"Progress\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/progress.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

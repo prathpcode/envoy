@@ -1,0 +1,60 @@
+/* ── transitions: route changes + intros ──────────────────────────────────
+   Snappy first. A route change never waits: the router swaps the page and the new
+   <PageSheet> snaps in from the right with a 4px overshoot over 260ms (PageTransitions, Web Animations).
+
+   Intros animate the individual transform properties (translate / rotate / scale),
+   never `transform`, so they compose with crooked tilt and peel physics. Fill mode is
+   `backwards`: once a sticker has landed, its own transform is back in charge. */
+
+@keyframes p3d-intro {
+  from { opacity: 0; translate: 0 -12px; rotate: var(--p3d-intro-rot, 0deg); scale: var(--p3d-intro-scale, 1); }
+}
+
+/* a single sticker that gets stuck on when it mounts; order it with --p3d-i */
+@utility intro {
+  animation: p3d-intro 280ms var(--ease-peel) backwards;
+  animation-delay: calc(var(--p3d-intro-base, 0ms) + var(--p3d-i, 0) * 40ms);
+}
+
+/* every direct child gets stuck on in order (capped at the 7th, so nothing waits long) */
+@utility intro-stagger {
+  & > * {
+    animation: p3d-intro 280ms var(--ease-peel) backwards;
+    animation-delay: calc(var(--p3d-intro-base, 0ms) + var(--p3d-i, 0) * 40ms);
+  }
+  & > :nth-child(2) { --p3d-i: 1; }
+  & > :nth-child(3) { --p3d-i: 2; }
+  & > :nth-child(4) { --p3d-i: 3; }
+  & > :nth-child(5) { --p3d-i: 4; }
+  & > :nth-child(6) { --p3d-i: 5; }
+  & > :nth-child(n + 7) { --p3d-i: 6; }
+}
+
+/* the page-level stagger: plays on the first load only. PageTransitions marks the page
+   settled once that intro is over; after that, route changes get the slide alone. */
+@utility intro-page {
+  :root:not([data-p3d-settled]) & > * {
+    animation: p3d-intro 280ms var(--ease-peel) backwards;
+    animation-delay: calc(var(--p3d-i, 0) * 40ms);
+  }
+  & > :nth-child(2) { --p3d-i: 1; }
+  & > :nth-child(3) { --p3d-i: 2; }
+  & > :nth-child(4) { --p3d-i: 3; }
+  & > :nth-child(5) { --p3d-i: 4; }
+  & > :nth-child(6) { --p3d-i: 5; }
+  & > :nth-child(n + 7) { --p3d-i: 6; }
+}
+
+/* Blocks, text and full-width things drop in straight (a rotated full-width block pokes
+   past the page edge, and long text never tilts: the Crooked Rule). Small loose stickers
+   may also tumble in. */
+@utility intro-tumble { --p3d-intro-rot: -6deg; --p3d-intro-scale: 1.06; }
+
+/* <Reveal>: holds its stickers back until it scrolls into view */
+[data-slot="reveal"][data-state="waiting"] > * { animation: none; opacity: 0; }
+
+/* The Still Rule: nothing animates in */
+@media (prefers-reduced-motion: reduce) {
+  .intro, .intro-stagger > *, .intro-page > * { animation: none !important; }
+  [data-slot="reveal"][data-state="waiting"] > * { opacity: 1; }
+}

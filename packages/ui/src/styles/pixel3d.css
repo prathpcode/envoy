@@ -1,0 +1,267 @@
+/*
+ * pixel3d-ui — the sticker material.
+ * Import once after tailwindcss:  @import "tailwindcss"; @import "@pixel3d/ui/styles.css";
+ * Every component is a die-cut sticker: a pixel-stepped silhouette (::before + stepped
+ * box-shadow bands) inside a white kiss-cut border (stacked drop-shadow filter).
+ */
+@import "@fontsource-variable/bricolage-grotesque";
+@import "./overlays.css";
+@import "./forms.css";
+@import "./navigation.css";
+@import "./data.css";
+@import "./kit.css";
+@import "./transitions.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* pixel3d owns its own font token so a host's --font-sans (e.g. shadcn's @theme inline) can't override it */
+  --font-p3d: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-p3d);
+  --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, monospace;
+
+  /* vinyl inks — one job each */
+  --color-pink: #ff3d8b;   /* act */
+  --color-lime: #b6f23a;   /* chosen / success */
+  --color-sky: #36b8ff;    /* on / focus / info */
+  --color-tomato: #ff5a36; /* destroy / error */
+  --color-butter: #ffd23f; /* warn */
+  --color-ink: #141414;
+  --color-ink-soft: #4a4d55;
+  --color-placeholder: #62656c; /* 5.9:1 on paper: AA, still reads as a hint */
+  --color-paper: #ffffff;
+
+  /* the lid (theme-aware) */
+  --color-lid: var(--p3d-lid);
+  --color-lid-deep: var(--p3d-lid-deep);
+  --color-on-lid: var(--p3d-on-lid);
+  --color-on-lid-soft: var(--p3d-on-lid-soft);
+
+  /* No Squint: the smallest step is 14px */
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.35;
+
+  --ease-peel: cubic-bezier(0.3, 1.7, 0.5, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* The Stepped Edge Rule: no smooth radius exists in this system */
+  --radius-*: initial;
+}
+
+:root {
+  --p3d-lid: #cdd1d8;
+  --p3d-lid-deep: #bfc4cc;
+  --p3d-on-lid: #141414;
+  --p3d-on-lid-soft: #3e4148;
+  --p3d-cut: #ffffff;
+  --p3d-shadow: 20 20 30;
+  --p3d-u: 4px;
+  color-scheme: light;
+}
+.dark {
+  --p3d-lid: #2b2e35;
+  --p3d-lid-deep: #23262c;
+  --p3d-on-lid: #f2f3f5;
+  --p3d-on-lid-soft: #b9bdc6;
+  --p3d-shadow: 0 0 0;
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    background: var(--p3d-lid);
+    color: var(--p3d-on-lid);
+    font-family: var(--font-p3d);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    scrollbar-color: var(--color-ink) var(--p3d-lid-deep);
+  }
+  body { background: var(--p3d-lid); font-size: 1rem; line-height: 1.55; }
+  ::selection { background: var(--color-pink); color: var(--color-ink); }
+  input, textarea, [contenteditable] { caret-color: var(--color-pink); }
+  :focus-visible { outline: 4px solid var(--color-sky); outline-offset: 4px; }
+  table { font-variant-numeric: tabular-nums; }
+  h1, h2, h3, h4 { text-wrap: balance; overflow-wrap: break-word; }
+  p, li, figcaption { text-wrap: pretty; }
+  ::-webkit-scrollbar { width: 14px; height: 14px; }
+  ::-webkit-scrollbar-track { background: var(--p3d-lid-deep); }
+  ::-webkit-scrollbar-thumb { background: var(--color-ink); border: 4px solid var(--p3d-lid-deep); }
+}
+
+/* Unlayered on purpose: the lid and the face win over a host app's base layer
+   (shadcn's default globals.css paints body bg-background + its own font). */
+html, body { background-color: var(--p3d-lid); font-family: var(--font-p3d); }
+/* The page never scrolls sideways. Peel scale, intros and resting tilt can poke a sticker
+   a few px past the edge; clip (not hidden) keeps position: sticky working. */
+body { overflow-x: clip; }
+
+/* ── the sticker ──────────────────────────────────────────── */
+/* 1-step notched corners (controls ≤ 48px tall) */
+@utility sticker {
+  --face: var(--color-paper);
+  --p3d-sh: 0 6px 5px rgb(var(--p3d-shadow) / 0.28);
+  position: relative;
+  isolation: isolate;
+  color: var(--color-ink);
+  filter:
+    drop-shadow(4px 0 0 var(--p3d-cut)) drop-shadow(-4px 0 0 var(--p3d-cut))
+    drop-shadow(0 4px 0 var(--p3d-cut)) drop-shadow(0 -4px 0 var(--p3d-cut))
+    drop-shadow(var(--p3d-sh));
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    z-index: -1;
+    pointer-events: none;
+    background: var(--face);
+    box-shadow:
+      0 -4px 0 0 var(--face), 0 4px 0 0 var(--face),
+      -4px 0 0 0 var(--face), 4px 0 0 0 var(--face);
+    transition: background-color 160ms, box-shadow 160ms;
+  }
+}
+/* 3-step corners (cards, dialogs, sheets): add alongside `sticker` */
+@utility sticker-lg {
+  &::before {
+    inset: 8px;
+    box-shadow:
+      0 -4px 0 0 var(--face), 0 -12px 0 -4px var(--face),
+      0 4px 0 0 var(--face), 0 12px 0 -4px var(--face),
+      -4px 0 0 0 var(--face), -12px 0 0 -4px var(--face),
+      4px 0 0 0 var(--face), 12px 0 0 -4px var(--face);
+  }
+}
+/* a sticker that lies flat: no lip shadow (pressed-in / selected) */
+@utility sticker-flat { --p3d-sh: 0 0 0 transparent; }
+
+/* faces */
+@utility face-paper { --face: var(--color-paper); color: var(--color-ink); }
+@utility face-pink { --face: var(--color-pink); color: var(--color-ink); }
+@utility face-lime { --face: var(--color-lime); color: var(--color-ink); }
+@utility face-sky { --face: var(--color-sky); color: var(--color-ink); }
+@utility face-tomato { --face: var(--color-tomato); color: var(--color-ink); }
+@utility face-butter { --face: var(--color-butter); color: var(--color-ink); }
+@utility face-ink { --face: var(--color-ink); color: var(--color-paper); }
+@utility face-lid { --face: var(--p3d-lid-deep); color: var(--p3d-on-lid); }
+
+/* resting tilt (The Crooked Rule) — set --p3d-tilt per instance */
+@utility crooked { transform: rotate(var(--p3d-tilt, 0deg)); }
+
+/* The Peel Rule: hover lifts + straightens, press slaps */
+@utility peel {
+  transform: rotate(var(--p3d-tilt, 0deg));
+  transition: transform 260ms var(--ease-peel), filter 260ms var(--ease-peel);
+  will-change: transform;
+  &:hover:not(:disabled):not([aria-disabled="true"]) {
+    transform: translateY(-5px) rotate(0deg) scale(1.04);
+    --p3d-sh: 0 14px 14px rgb(var(--p3d-shadow) / 0.24);
+  }
+  &:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: rotate(0deg) scale(0.94);
+    --p3d-sh: 0 2px 2px rgb(var(--p3d-shadow) / 0.3);
+    transition-duration: 90ms;
+  }
+}
+/* gentler peel for big stickers: lift a corner in 3D instead of scaling */
+@utility peel-3d {
+  transform: perspective(900px) rotate(var(--p3d-tilt, 0deg));
+  transition: transform 320ms var(--ease-peel), filter 320ms var(--ease-peel);
+  &:hover {
+    transform: perspective(900px) rotateX(5deg) rotateY(-4deg) translateY(-6px);
+    --p3d-sh: 0 18px 18px rgb(var(--p3d-shadow) / 0.22);
+  }
+}
+
+/* focus = the kiss-cut turns sky. A stepped focus ring for free. */
+@utility focus-cut {
+  outline: none;
+  &:focus-visible { --p3d-cut: var(--color-sky); outline: none; }
+}
+@utility focus-within-cut {
+  &:focus-within { --p3d-cut: var(--color-sky); }
+}
+
+/* disabled stickers are blank, flat and still */
+@utility sticker-disabled {
+  &:disabled, &[aria-disabled="true"], &[data-disabled] {
+    --face: #e4e6ea;
+    --p3d-sh: 0 0 0 transparent;
+    color: var(--color-ink-soft);
+    cursor: not-allowed;
+  }
+}
+
+/* pixel icons render crisp */
+@utility pixel-icon {
+  shape-rendering: crispEdges;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+/* a 4px dotted pixel rule */
+@utility pixel-rule {
+  height: 4px;
+  background-image: linear-gradient(90deg, currentColor 50%, transparent 50%);
+  background-size: 8px 4px;
+}
+
+/* ── motion keyframes ─────────────────────────────────────── */
+@keyframes p3d-land {
+  0% { transform: scale(1.3) rotate(-14deg) translateY(-6px); opacity: 0; }
+  60% { transform: scale(0.94) rotate(-2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-4deg); opacity: 1; }
+}
+@keyframes p3d-peel-off {
+  0% { transform: scale(1) rotate(-4deg); opacity: 1; }
+  100% { transform: scale(1.1) rotate(12deg) translateY(-8px); opacity: 0; }
+}
+@keyframes p3d-slap {
+  0% { transform: scale(1.12) rotate(var(--p3d-tilt, 0deg)); }
+  55% { transform: scale(0.96) rotate(var(--p3d-tilt, 0deg)); }
+  100% { transform: scale(1) rotate(var(--p3d-tilt, 0deg)); }
+}
+/* stamp: the whole sticker thunks down when its state changes (two names so it re-runs) */
+@keyframes p3d-stamp { 0% { transform: scale(1.18); } 55% { transform: scale(0.92); } 100% { transform: scale(1); } }
+@keyframes p3d-unstamp { 0% { transform: scale(0.88); } 100% { transform: scale(1); } }
+/* tab panels: straight, short, no rotate (panels are full-width) */
+@keyframes p3d-tab-in { from { opacity: 0; translate: 0 -8px; } }
+@keyframes p3d-drop-in {
+  0% { transform: translateY(-14px) rotate(-6deg) scale(1.06); opacity: 0; }
+  100% { transform: translateY(0) rotate(var(--p3d-tilt, 0deg)) scale(1); opacity: 1; }
+}
+@keyframes p3d-lift-out {
+  0% { transform: translateY(0) rotate(var(--p3d-tilt, 0deg)); opacity: 1; }
+  100% { transform: translateY(-10px) rotate(6deg) scale(1.03); opacity: 0; }
+}
+@keyframes p3d-pixel-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes p3d-shimmer {
+  0% { background-position: 0 0; }
+  100% { background-position: 32px 0; }
+}
+
+@utility animate-land { animation: p3d-land 360ms var(--ease-peel) both; }
+@utility animate-peel-off { animation: p3d-peel-off 200ms ease-in both; }
+@utility animate-stamp { animation: p3d-stamp 320ms var(--ease-peel); }
+@utility animate-unstamp { animation: p3d-unstamp 220ms var(--ease-peel); }
+@utility animate-slap { animation: p3d-slap 320ms var(--ease-peel); }
+@utility animate-tab-in { animation: p3d-tab-in 180ms var(--ease-out-expo) backwards; }
+@utility animate-drop-in { animation: p3d-drop-in 320ms var(--ease-out-expo) both; }
+@utility animate-lift-out { animation: p3d-lift-out 180ms ease-in both; }
+
+/* overlays (Radix data-state) */
+@utility overlay-motion {
+  &[data-state="open"] { animation: p3d-drop-in 320ms var(--ease-out-expo) both; }
+  &[data-state="closed"] { animation: p3d-lift-out 160ms ease-in both; }
+}
+
+/* The Still Rule */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+  .peel:hover, .peel-3d:hover { transform: rotate(var(--p3d-tilt, 0deg)) !important; }
+}

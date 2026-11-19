@@ -1,0 +1,43 @@
+import { NextPage } from "@/components/mdx-parts";
+
+export const metadata = { title: "Accessibility" };
+
+<div className="prose-p3d intro-page">
+
+# Accessibility
+
+Fun never costs access. pixel3d-ui targets **WCAG 2.2 AA** for every component, in both themes.
+
+## What you get for free
+
+- **Radix semantics.** Every interactive component wraps a Radix primitive: correct roles, ARIA states, focus management, keyboard support and screen-reader announcements.
+- **Visible focus.** A focused sticker's white kiss-cut turns sky blue: a stepped, high-contrast ring that follows the sticker's shape. Non-sticker elements get a 4px sky outline.
+- **Contrast.** Text on every coloured sticker is ink black, which keeps at least 6.3:1 on pink, tomato, lime, sky and butter. Secondary text on white is `#4A4D55` (8.6:1).
+- **Legible sizes.** The No Squint rule keeps all text at 14px or larger, and body text at 16px or larger.
+- **Reduced motion.** Peel, flutter, bursts and transitions stop under `prefers-reduced-motion`.
+- **3D is decorative-safe.** The shared canvas is `aria-hidden`. Each 3D sticker is a `role="img"` element with a label, and has an SVG fallback.
+
+## What you still own
+
+- **Name icon-only buttons.** `<Button size="icon" aria-label="Delete team">`.
+- **Label every field.** Use the name-tag `label` prop, or `aria-label` when you drop the band.
+- **Write errors as problem + fix.** "That repo is private: make it public", not "Invalid input".
+- **Don't encode meaning in ink alone.** Pair colour with a word or an icon: "Submitted" plus lime, not lime alone.
+- **Keep tilt off long text.** Crooked stickers are for short labels; paragraphs, tables and lists stay straight.
+
+## Keyboard map
+
+| Component | Keys |
+|---|---|
+| Button, Toggle | Enter / Space |
+| Checkbox, Switch | Space |
+| Radio group, Tabs, Toggle group | Arrow keys move, Space/Enter select |
+| Select, Combobox, Command | Arrows, Enter, Escape, type-ahead |
+| Dialog, Sheet, Drawer, Alert dialog | Escape closes; focus is trapped and restored |
+| Menus | Arrows, Enter, Escape, Right/Left for submenus |
+| Slider | Arrows, Page Up/Down, Home/End |
+| Calendar | Arrows by day, Page Up/Down by month |
+
+<NextPage href="/docs/playbook" title="Hackathon playbook" />
+
+</div>

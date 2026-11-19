@@ -1,0 +1,65 @@
+import { Sticker3D } from "@pixel3d/ui/three";
+import { Stage, Rule, NextPage } from "@/components/mdx-parts";
+
+export const metadata = { title: "3D with three.js" };
+
+<div className="prose-p3d intro-page">
+
+# 3D with three.js
+
+The "3D" in pixel3d is real WebGL. Voxel stickers, bursts and hero scenes are drawn by three.js through React Three Fiber, then placed in your normal page layout like any other element.
+
+<Stage tall>
+  <Sticker3D pattern="star" className="size-52" />
+  <Sticker3D pattern="rocket" className="size-52" motion="spin" />
+  <Sticker3D pattern="coffee" className="size-52" />
+</Stage>
+
+Hover them: they peel toward you.
+
+## One canvas, many stickers
+
+Browsers allow roughly 16 WebGL contexts per page, so a canvas per component falls over fast. pixel3d-ui mounts **one** transparent, fixed, full-viewport canvas (`<StickerCanvas>`), and every 3D component draws into it through drei's `<View>`, scissored to its own DOM box. Forty stickers cost one context.
+
+<Rule name="One Canvas">Mount StickerCanvas once, at the root. Never create a second Canvas for a pixel3d component.</Rule>
+
+```tsx
+// app/layout.tsx: once
+<StickerCanvas>{children}</StickerCanvas>
+
+// anywhere below
+<Sticker3D pattern="heart" className="size-48" />
+```
+
+## Draw your own sticker
+
+Patterns are just rows of characters. `.` is empty; letters map to colours. The defaults are `p` pink, `l` lime, `s` sky, `b` butter, `t` tomato, `k` ink and `w` white, and you can override any of them with `colors`.
+
+```tsx
+const laptop = [
+  ".kkkkkkk.",
+  ".kssssk..",
+  ".kssssk..",
+  ".kkkkkkk.",
+  "wwwwwwwww",
+];
+
+<Sticker3D pattern={laptop} colors={{ s: "#b6f23a" }} className="size-56" />
+```
+
+Every voxel sticker gets a white kiss-cut backing automatically: the pattern dilated by one cell, so it matches the DOM stickers exactly.
+
+## Performance and fallbacks
+
+- The canvas mounts **after first paint**, during browser idle time, so it never blocks LCP.
+- Before it mounts, and wherever WebGL is unavailable, each 3D component shows a crisp SVG of the same pattern (`PatternSVG`).
+- The canvas uses `flat` colour (no tone mapping), so inks match the CSS hex values exactly.
+- Use 3D for **showpieces**: heroes, empty states, avatars, wins. Dense controls (inputs, table rows, checkboxes) stay CSS, so a 50-field form stays fast.
+
+## Reduced motion
+
+Idle flutter, spin and bursts stop under `prefers-reduced-motion`. The stickers still render in 3D, they just hold still. Pass `respectReducedMotion` to `StickerCanvas` to skip WebGL entirely and keep the SVG fallbacks.
+
+<NextPage href="/docs/accessibility" title="Accessibility" />
+
+</div>

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "toggle",
+  "title": "Toggle",
+  "description": "A paper sticker you press in: pressed turns lime, lies flat and straightens.",
+  "dependencies": [
+    "radix-ui@1.8.1",
+    "class-variance-authority@0.7.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/toggle.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { Toggle as TogglePrimitive } from \"radix-ui\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn, useTilt, type Tilt } from \"@/lib/pixel3d\";\n\n/**\n * Toggle — a paper sticker you press in. Pressed = lime (chosen), lying flat and straight.\n * `outline` is a blank lid-coloured sticker with just the white kiss-cut.\n */\nexport const toggleVariants = cva(\n  \"sticker sticker-disabled focus-cut peel inline-flex shrink-0 cursor-pointer select-none items-center justify-center gap-2 whitespace-nowrap font-p3d font-extrabold [&_svg]:pixel-icon [&_svg]:shrink-0 data-[state=on]:face-lime data-[state=on]:sticker-flat data-[state=on]:[--p3d-tilt:0deg]\",\n  {\n    variants: {\n      variant: {\n        default: \"face-paper\",\n        outline: \"face-lid\",\n      },\n      size: {\n        sm: \"h-10 min-w-10 px-3 text-base [&_svg]:size-5\",\n        default: \"h-12 min-w-12 px-4 text-[17px] [&_svg]:size-6\",\n        lg: \"h-14 min-w-14 px-5 text-lg [&_svg]:size-6\",\n      },\n    },\n    defaultVariants: { variant: \"default\", size: \"default\" },\n  }\n);\n\nexport interface ToggleProps\n  extends React.ComponentPropsWithoutRef<typeof TogglePrimitive.Root>,\n    VariantProps<typeof toggleVariants> {\n  /** Resting angle when not pressed. \"auto\" (default) picks a stable crooked angle; false = straight. */\n  tilt?: Tilt;\n}\n\nexport const Toggle = React.forwardRef<React.ComponentRef<typeof TogglePrimitive.Root>, ToggleProps>(\n  ({ className, variant, size, tilt = \"auto\", style, ...props }, ref) => {\n    const tiltStyle = useTilt(tilt);\n    return (\n      <TogglePrimitive.Root\n        ref={ref}\n        data-slot=\"toggle\"\n        style={{ ...tiltStyle, ...style }}\n        className={cn(toggleVariants({ variant, size }), className)}\n        {...props}\n      />\n    );\n  }\n);\nToggle.displayName = \"Toggle\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/toggle.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

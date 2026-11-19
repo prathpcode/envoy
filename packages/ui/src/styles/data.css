@@ -1,0 +1,148 @@
+/* pixel3d-ui — data group styles (component-specific keyframes/utilities). */
+
+/* ── 1-step notched corners as a mask (for things that aren't `sticker`s:
+      skeleton blocks, avatar images and fallbacks). A mask, never a clip-path polygon. ── */
+@utility pixel-notch {
+  -webkit-mask: conic-gradient(at 4px 4px, #000 75%, #0000 0) 0 0 / calc(100% - 4px) calc(100% - 4px) round;
+  mask: conic-gradient(at 4px 4px, #000 75%, #0000 0) 0 0 / calc(100% - 4px) calc(100% - 4px) round;
+}
+
+/* ── table: dashed pixel separators between body rows ── */
+@utility table-pixel-rows {
+  & > tr {
+    background-image: linear-gradient(90deg, rgb(20 20 20 / 0.3) 50%, transparent 50%);
+    background-size: 8px 2px;
+    background-repeat: repeat-x;
+    background-position: 0 100%;
+  }
+  & > tr:last-child { background-image: none; }
+}
+
+/* ── skeleton: lid-deep block + a dithered 2×2 checker band that sweeps in steps() ── */
+@keyframes p3d-dither-sweep {
+  0% { -webkit-mask-position: 100% 0; mask-position: 100% 0; }
+  100% { -webkit-mask-position: 0% 0; mask-position: 0% 0; }
+}
+@utility skeleton-dither {
+  --p3d-dither: rgb(255 255 255 / 0.55);
+  position: relative;
+  background: var(--p3d-lid-deep);
+  /* recessed: a soft inner lip from the light above */
+  box-shadow: inset 0 4px 4px rgb(var(--p3d-shadow) / 0.12);
+  &:where(.dark, .dark *) { --p3d-dither: rgb(255 255 255 / 0.09); }
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    /* 4px checker cells = a 2×2 dither tile on the 4px grid */
+    background: conic-gradient(var(--p3d-dither) 25%, transparent 0 50%, var(--p3d-dither) 0 75%, transparent 0) 0 0 / 8px 8px;
+    -webkit-mask: linear-gradient(90deg, #0000 0 40%, #0008 40% 44%, #000 44% 56%, #0008 56% 60%, #0000 60%) 100% 0 / 300% 100% no-repeat;
+    mask: linear-gradient(90deg, #0000 0 40%, #0008 40% 44%, #000 44% 56%, #0008 56% 60%, #0000 60%) 100% 0 / 300% 100% no-repeat;
+    animation: p3d-dither-sweep 1400ms steps(14) infinite;
+  }
+}
+
+/* ── progress: an XP bar. The fill width is quantised to whole 8px blocks, so as the
+      registered --p3d-pv animates the bar gains one block at a time. ── */
+@property --p3d-pv {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+@keyframes p3d-xp-scan {
+  0% { margin-left: 0; }
+  100% { margin-left: calc(100% - 24px); }
+}
+@utility xp-fill {
+  height: 100%;
+  width: calc(var(--p3d-pv) * 1%);
+  width: round(down, calc(var(--p3d-pv) * 1%), 8px);
+  background: repeating-linear-gradient(90deg, var(--color-pink) 0 6px, transparent 6px 8px);
+  transition: --p3d-pv 700ms var(--ease-out-expo);
+}
+@utility xp-scan {
+  width: 24px;
+  height: 100%;
+  background: repeating-linear-gradient(90deg, var(--color-pink) 0 6px, transparent 6px 8px);
+  animation: p3d-xp-scan 1200ms steps(16) infinite alternate;
+}
+
+/* ── carousel: cover-flow. Embla writes --p3d-d (signed distance from centre, in slides)
+      and --p3d-ad (its absolute value, clamped to 1) on every slide. ── */
+@utility slide-flow {
+  --p3d-k: min(var(--p3d-ad, 0), 1);
+  transform:
+    perspective(900px)
+    translateY(calc(-8px * (1 - var(--p3d-k))))
+    rotateY(calc(var(--p3d-d, 0) * -30deg))
+    rotate(calc(var(--p3d-tilt, 0deg) * var(--p3d-k)))
+    scale(calc(1.04 - var(--p3d-k) * 0.14));
+  transform-origin: 50% 50%;
+  will-change: transform;
+  &[data-center] { --p3d-sh: 0 14px 14px rgb(var(--p3d-shadow) / 0.24); }
+  @media (prefers-reduced-motion: reduce) {
+    transform: rotate(calc(var(--p3d-tilt, 0deg) * var(--p3d-k)));
+  }
+}
+@utility slide-flow-y {
+  --p3d-k: min(var(--p3d-ad, 0), 1);
+  transform:
+    perspective(900px)
+    rotateX(calc(var(--p3d-d, 0) * 26deg))
+    rotate(calc(var(--p3d-tilt, 0deg) * var(--p3d-k)))
+    scale(calc(1.04 - var(--p3d-k) * 0.14));
+  will-change: transform;
+  &[data-center] { --p3d-sh: 0 14px 14px rgb(var(--p3d-shadow) / 0.24); }
+  @media (prefers-reduced-motion: reduce) {
+    transform: rotate(calc(var(--p3d-tilt, 0deg) * var(--p3d-k)));
+  }
+}
+
+/* ── chart: pixel styling for Recharts inside ChartContainer ── */
+@utility chart-pixel {
+  & .recharts-cartesian-axis-tick text,
+  & .recharts-label,
+  & .recharts-text {
+    /* recharts writes fill: #666 inline on tick text */
+    fill: currentColor !important;
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  & .recharts-cartesian-axis-line,
+  & .recharts-cartesian-axis-tick-line {
+    stroke: currentColor;
+    stroke-width: 2px;
+    shape-rendering: crispEdges;
+  }
+  & .recharts-cartesian-grid line {
+    stroke: currentColor;
+    stroke-opacity: 0.22;
+    stroke-dasharray: 4 4;
+    shape-rendering: crispEdges;
+  }
+  & .recharts-bar-rectangle path,
+  & .recharts-rectangle {
+    shape-rendering: crispEdges;
+  }
+  & .recharts-line-curve,
+  & .recharts-area-curve {
+    stroke-linejoin: miter;
+    stroke-linecap: square;
+    shape-rendering: crispEdges;
+  }
+  & .recharts-tooltip-cursor {
+    stroke: currentColor;
+    stroke-width: 2px;
+    stroke-dasharray: 4 4;
+    shape-rendering: crispEdges;
+  }
+  & .recharts-rectangle.recharts-tooltip-cursor {
+    fill: currentColor;
+    fill-opacity: 0.08;
+    stroke: none;
+  }
+  & .recharts-surface { overflow: visible; }
+  & .recharts-wrapper { outline: none; }
+  & .recharts-sector, & .recharts-surface:focus { outline: none; }
+}

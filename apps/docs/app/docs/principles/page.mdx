@@ -1,0 +1,77 @@
+import { Button, Badge } from "@pixel3d/ui";
+import { Rule, DoDont, NextPage } from "@/components/mdx-parts";
+import { TooManyVoices, FewVoices } from "@/components/guide-demos";
+
+export const metadata = { title: "Design principles" };
+
+<div className="prose-p3d intro-page">
+
+# Design principles
+
+pixel3d-ui has opinions so your hackathon project doesn't need a designer. These rules come from `DESIGN.md` at the root of the repo. They're enforced in the components and checked by Impeccable's design detector. Follow them in your own screens and the result reads as designed, not generated.
+
+<Rule name="Sticker">If it can't be described as "a sticker doing something", it doesn't belong. Every surface is a die-cut sticker with stepped edges and a white kiss-cut border.</Rule>
+
+<Rule name="Seasoning">Pixel art shapes edges, icons and voxels. It never sets body text and never fills a background. Text is Bricolage Grotesque, always readable.</Rule>
+
+## Few voices
+
+The most common way AI-built UI goes wrong is too many little bits of text: an eyebrow above the heading, a subtitle, a meta row, a footnote, a badge on everything. pixel3d-ui caps the **number of places** text appears, not its length.
+
+<Rule name="Few Voices">A section gets at most three text elements: a heading, one line, an action. A component has one text role per slot. No eyebrows, no meta rows, no captions under images. Helper text appears only when it prevents an error.</Rule>
+
+<DoDont
+  good={<FewVoices />}
+  goodNote="One heading, one line, one action. The sticker does the rest."
+  bad={<TooManyVoices />}
+  badNote="Six text spots, three of them tiny gray meta. Delete until it hurts."
+/>
+
+## No squint
+
+<Rule name="No Squint">Body text is never below 16px. Nothing, anywhere, is below 14px: not labels, not badges, not table meta, not legal. If it needs to be smaller to fit, cut it instead. No uppercase tracked micro-labels.</Rule>
+
+The type scale tops out at 96px for display moments, and steps down through 64 / 44 / 32 / 24 for headings. Control labels sit at 17–20px in extrabold. Tailwind's `text-xs` is remapped to 14px in pixel3d, so even a slip stays legible.
+
+## One ink, one job
+
+<Rule name="One Job">Pink acts. Lime chooses and succeeds. Sky turns on, focuses and informs. Tomato destroys. Butter warns. An ink means one thing everywhere, and never decorates.</Rule>
+
+<DoDont
+  good={<><Button>Submit project</Button><Button variant="secondary">Save draft</Button></>}
+  goodNote="One pink action per region. Everything else is paper."
+  bad={<><Button>Submit</Button><Button>Save</Button><Button>Preview</Button></>}
+  badNote="Three pinks: now nothing is the action."
+/>
+
+Text on every coloured sticker is ink black. White text is reserved for the ink sticker. Never put gray text on a colour.
+
+## Crooked, but not everywhere
+
+<Rule name="Crooked">Small standalone stickers (buttons, badges, chips, cards, avatars) rest a little crooked, between −2.5° and +2.5°. Fields, tables, menus, dialog bodies and long text are always straight. Charm never costs readability.</Rule>
+
+<DoDont
+  good={<><Badge tone="sky" tilt={-2.5}>AI</Badge><Badge tone="sky" tilt={2}>Hardware</Badge><Badge tone="sky" tilt={-1}>Open source</Badge></>}
+  goodNote="A few loose stickers on bare lid: playful and easy to scan."
+  bad={<div className="flex flex-col gap-3">{["Team Voxel", "Null Pointers", "Byte Club"].map((t, i) => <span key={t} className="sticker face-paper crooked px-4 py-2 text-lg font-semibold" style={{ ["--p3d-tilt"]: `${[-4, 3, -3][i]}deg` }}>{t}</span>)}</div>}
+  badNote="A tilted list is a list you can't read. Lists stay straight."
+/>
+
+## Banned outright
+
+These are the fingerprints of generic generated UI. None of them exist in pixel3d-ui, and none should appear in screens built with it:
+
+- smooth rounded corners (every edge is a staircase on the 4px grid)
+- gradient text, purple-to-blue gradients, glass and blur
+- eyebrow/kicker labels and section numbers like 01 / 02 / 03
+- nested cards, and grids of identical icon + heading + text cards
+- the hero-metric template: big number, tiny label, three stats
+- coloured `border-left` callouts
+- emoji or unicode glyphs as icons (use the pixel icon set)
+- monospace as a "techy" costume (code only)
+- thick black 8-bit outlines and hard zero-blur offset shadows
+- celebrating an ordinary click
+
+<NextPage href="/docs/theming" title="Theming & tokens" />
+
+</div>

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "kbd",
+  "title": "Kbd",
+  "description": "A key cap: a tiny paper sticker with a stepped pixel lip along the bottom.",
+  "dependencies": [],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/kbd.tsx",
+      "content": "import * as React from \"react\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * Kbd — a key cap: a tiny straight paper sticker with a stepped pixel lip along the bottom.\n * KbdGroup spaces caps for a shortcut. Text never drops below 14px.\n *\n *   <KbdGroup><Kbd>Ctrl</Kbd><Kbd>K</Kbd></KbdGroup>\n */\nexport const Kbd = React.forwardRef<HTMLElement, React.ComponentPropsWithoutRef<\"kbd\">>(\n  ({ className, ...props }, ref) => (\n    <kbd\n      ref={ref}\n      data-slot=\"kbd\"\n      className={cn(\n        \"sticker face-paper pointer-events-none inline-flex h-8 min-w-8 shrink-0 select-none items-center justify-center gap-1 px-2 pb-1 align-middle font-p3d text-sm font-bold leading-none text-ink\",\n        // the lip: a 4px recessed band inside the notched corners\n        \"after:pointer-events-none after:absolute after:inset-x-1 after:bottom-0 after:h-1 after:bg-[#bfc4cc] after:content-['']\",\n        \"[&_svg]:pixel-icon [&_svg]:size-4\",\n        className\n      )}\n      {...props}\n    />\n  )\n);\nKbd.displayName = \"Kbd\";\n\nexport const KbdGroup = React.forwardRef<HTMLElement, React.ComponentPropsWithoutRef<\"kbd\">>(\n  ({ className, ...props }, ref) => (\n    <kbd\n      ref={ref}\n      data-slot=\"kbd-group\"\n      className={cn(\"inline-flex items-center gap-3 align-middle font-p3d\", className)}\n      {...props}\n    />\n  )\n);\nKbdGroup.displayName = \"KbdGroup\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/kbd.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

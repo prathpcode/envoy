@@ -1,0 +1,72 @@
+import { Swatch, NextPage } from "@/components/mdx-parts";
+
+export const metadata = { title: "Theming & tokens" };
+
+<div className="prose-p3d intro-page">
+
+# Theming & tokens
+
+pixel3d-ui uses a **Full palette** strategy: five vinyl inks on a neutral aluminium lid. Every token is a Tailwind v4 theme variable, so `bg-pink`, `text-ink` and `bg-lid` work everywhere.
+
+## The inks
+
+<div className="not-prose my-10 flex flex-wrap gap-x-10 gap-y-12">
+  <Swatch name="Hot Pink" hex="#FF3D8B" job="Act: primary actions, caret" face="face-pink" />
+  <Swatch name="Lime" hex="#B6F23A" job="Chosen, success" face="face-lime" />
+  <Swatch name="Sky" hex="#36B8FF" job="On, focus, info" face="face-sky" />
+  <Swatch name="Tomato" hex="#FF5A36" job="Destroy, error" face="face-tomato" />
+  <Swatch name="Butter" hex="#FFD23F" job="Warn" face="face-butter" />
+  <Swatch name="Ink" hex="#141414" job="Text, structure" face="face-ink" />
+  <Swatch name="Paper" hex="#FFFFFF" job="Default face, kiss-cut" face="face-paper" />
+</div>
+
+## The lid
+
+The ground changes with the theme; stickers don't. That's what real stickers do on a silver or a space-gray laptop.
+
+| Token | Light | Dark | Used for |
+|---|---|---|---|
+| `--color-lid` | `#CDD1D8` | `#2B2E35` | Page ground |
+| `--color-lid-deep` | `#BFC4CC` | `#23262C` | Recessed regions, stages, sidebars |
+| `--color-on-lid` | `#141414` | `#F2F3F5` | Text sitting directly on the lid |
+| `--color-on-lid-soft` | `#3E4148` | `#B9BDC6` | Secondary text on the lid |
+
+## Faces
+
+A sticker's colour is its `--face`. Use the face utilities rather than background colours, because they also set the right text colour and colour the stepped corners:
+
+```tsx
+<div className="sticker face-lime px-4 py-2">Chosen</div>
+<div className="sticker sticker-lg face-paper p-6">A panel</div>
+```
+
+`face-paper`, `face-pink`, `face-lime`, `face-sky`, `face-tomato`, `face-butter`, `face-ink`, `face-lid`.
+
+## Changing the inks
+
+Override the theme variables after importing the material. Keep each ink's job; change only its hue. Check contrast with ink text (≥ 4.5:1).
+
+```css
+@import "tailwindcss";
+@import "@pixel3d/ui/styles.css";
+
+@theme {
+  --color-pink: #ff2e63;  /* your brand's "act" colour */
+  --color-sky: #2ec4ff;
+}
+```
+
+## Changing the lid
+
+```css
+:root { --p3d-lid: #d9d4ff; --p3d-lid-deep: #cbc4fa; }
+.dark { --p3d-lid: #1e1b2e; --p3d-lid-deep: #17152a; }
+```
+
+## Type
+
+One family, `--font-sans: "Bricolage Grotesque Variable"`, self-hosted through Fontsource. Code uses the system monospace stack. If you swap the face, pick one with a point of view and keep the floors: 16px body, 14px absolute minimum.
+
+<NextPage href="/docs/stickers" title="The sticker material" />
+
+</div>

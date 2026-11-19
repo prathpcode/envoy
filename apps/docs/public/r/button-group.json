@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "button-group",
+  "title": "Button Group",
+  "description": "Buttons fused edge to edge into one straight sticker strip with ink pixel dividers.",
+  "dependencies": [],
+  "registryDependencies": [
+    "@pixel3d/pixel3d",
+    "@pixel3d/button"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/button-group.tsx",
+      "content": "import * as React from \"react\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * ButtonGroup — fuses Buttons edge to edge into one straight sticker strip: a single\n * kiss-cut around the whole strip, ink pixel dividers between segments. Each Button keeps\n * its ink. The fusing styles live in styles/navigation.css (`[data-slot=\"button-group\"]`).\n */\nexport interface ButtonGroupProps extends React.HTMLAttributes<HTMLDivElement> {\n  orientation?: \"horizontal\" | \"vertical\";\n}\n\nexport const ButtonGroup = React.forwardRef<HTMLDivElement, ButtonGroupProps>(\n  ({ className, orientation = \"horizontal\", ...props }, ref) => (\n    <div\n      ref={ref}\n      role=\"group\"\n      data-slot=\"button-group\"\n      data-orientation={orientation}\n      className={cn(\n        \"sticker face-paper inline-flex w-fit items-stretch\",\n        orientation === \"vertical\" ? \"flex-col\" : \"flex-row\",\n        className\n      )}\n      {...props}\n    />\n  )\n);\nButtonGroup.displayName = \"ButtonGroup\";\n\n/** A non-interactive paper segment in the strip: a count, a unit, a label. */\nexport const ButtonGroupText = React.forwardRef<HTMLSpanElement, React.HTMLAttributes<HTMLSpanElement>>(\n  ({ className, ...props }, ref) => (\n    <span\n      ref={ref}\n      data-slot=\"button-group-text\"\n      className={cn(\n        \"sticker face-paper inline-flex items-center gap-2 px-4 text-base font-extrabold tabular-nums [&_svg]:pixel-icon [&_svg]:size-5\",\n        className\n      )}\n      {...props}\n    />\n  )\n);\nButtonGroupText.displayName = \"ButtonGroupText\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/button-group.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

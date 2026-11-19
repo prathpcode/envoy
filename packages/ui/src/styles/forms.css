@@ -1,0 +1,50 @@
+/* pixel3d-ui — forms group styles (component-specific keyframes/utilities). */
+
+/* pink fill in a 4px pixel checker (slider range) */
+@utility pixel-fill-pink {
+  background-color: var(--color-pink);
+  background-image: conic-gradient(#ff7aae 25%, transparent 0 50%, #ff7aae 0 75%, transparent 0);
+  background-size: 8px 8px;
+  image-rendering: pixelated;
+}
+
+/* the pink block caret (input-otp slots) */
+@keyframes p3d-caret-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@utility animate-caret-blink { animation: p3d-caret-blink 1s steps(1) infinite; }
+
+@layer components {
+  /* ── slider thumb: crooked ink block, peels on hover, stays lifted while grabbed ── */
+  [data-slot="slider-thumb-block"] {
+    transform: rotate(var(--p3d-tilt, 0deg));
+    transition: transform 260ms var(--ease-peel), filter 260ms var(--ease-peel);
+  }
+  [data-slot="slider-thumb"]:focus-visible > [data-slot="slider-thumb-block"] {
+    --p3d-cut: var(--color-sky);
+  }
+  [data-slot="slider-thumb"]:not([data-disabled]):hover > [data-slot="slider-thumb-block"],
+  [data-slot="slider"][data-dragging] [data-slot="slider-thumb"]:focus > [data-slot="slider-thumb-block"] {
+    transform: translateY(-5px) rotate(0deg) scale(1.08);
+    --p3d-sh: 0 14px 14px rgb(var(--p3d-shadow) / 0.24);
+  }
+
+  /* value sticker: hidden until you grab (or keyboard-focus) the thumb */
+  [data-slot="slider-value"] {
+    opacity: 0;
+    transform: translate(-50%, 6px) scale(0.9);
+    transition: opacity 120ms, transform 260ms var(--ease-peel);
+  }
+  [data-slot="slider"][data-dragging] [data-slot="slider-thumb"]:focus > [data-slot="slider-value"],
+  [data-slot="slider-thumb"]:focus-visible > [data-slot="slider-value"] {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="slider"] [data-slot="slider-thumb"] > [data-slot="slider-thumb-block"] {
+      transform: rotate(var(--p3d-tilt, 0deg)) !important;
+    }
+  }
+}

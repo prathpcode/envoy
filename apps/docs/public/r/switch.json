@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "switch",
+  "title": "Switch",
+  "description": "A sticker track with an ink block knob that springs across; on turns the track sky.",
+  "dependencies": [
+    "radix-ui@1.8.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/switch.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { Switch as SwitchPrimitive } from \"radix-ui\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * Switch — a sticker track with an ink block knob. On = sky (the \"on\" ink).\n * The knob springs across with an overshoot.\n */\nexport const Switch = React.forwardRef<\n  React.ComponentRef<typeof SwitchPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof SwitchPrimitive.Root>\n>(({ className, ...props }, ref) => (\n  <SwitchPrimitive.Root\n    ref={ref}\n    data-slot=\"switch\"\n    className={cn(\n      \"peer sticker sticker-disabled focus-cut face-paper relative inline-flex h-10 w-[76px] shrink-0 cursor-pointer items-center px-[7px]\",\n      \"data-[state=checked]:face-sky\",\n      className\n    )}\n    {...props}\n  >\n    <SwitchPrimitive.Thumb\n      className={cn(\n        \"block size-[26px] bg-ink shadow-[0_3px_0_rgb(var(--p3d-shadow)/0.3)]\",\n        \"transition-transform duration-300 ease-peel\",\n        \"data-[state=checked]:translate-x-[36px]\"\n      )}\n    />\n  </SwitchPrimitive.Root>\n));\nSwitch.displayName = \"Switch\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/switch.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

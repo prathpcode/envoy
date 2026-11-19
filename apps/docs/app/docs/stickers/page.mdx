@@ -1,0 +1,72 @@
+import { Stage, NextPage } from "@/components/mdx-parts";
+import { TiltRow } from "@/components/guide-demos";
+
+export const metadata = { title: "The sticker material" };
+
+<div className="prose-p3d intro-page">
+
+# The sticker material
+
+Every pixel3d-ui component is built from a handful of CSS utilities. Once you know them you can turn anything into a sticker, including your own components.
+
+<Stage>
+  <div className="sticker face-paper px-5 py-3 text-lg font-extrabold">sticker</div>
+  <div className="sticker sticker-lg face-sky px-7 py-6 text-lg font-extrabold">sticker sticker-lg</div>
+  <div className="sticker face-lime crooked px-5 py-3 text-lg font-extrabold [--p3d-tilt:-3deg]">crooked</div>
+  <button className="sticker face-pink peel focus-cut cursor-pointer px-5 py-3 text-lg font-extrabold [--p3d-tilt:2deg]">peel</button>
+</Stage>
+
+## Anatomy
+
+A sticker is three layers on one element:
+
+1. **The silhouette.** A `::before` pseudo-element is filled with `--face` and extended by stepped box-shadow bands, so the corners are notched on the 4px grid. `sticker` gives one step (for controls); add `sticker-lg` for three steps (panels, cards, dialogs).
+2. **The kiss-cut.** Four stacked `drop-shadow` filters trace a 4px white border around whatever shape the silhouette makes, stepped corners included.
+3. **The lip.** A last, soft `drop-shadow` (offset and blurred, never hard) makes it sit on the lid.
+
+```css
+.sticker {
+  --face: white;
+  filter: drop-shadow(4px 0 0 white) drop-shadow(-4px 0 0 white)
+          drop-shadow(0 4px 0 white) drop-shadow(0 -4px 0 white)
+          drop-shadow(0 6px 5px rgb(20 20 30 / .28));
+}
+.sticker::before { background: var(--face); box-shadow: /* stepped bands */; }
+```
+
+## The utilities
+
+| Utility | Does |
+|---|---|
+| `sticker` | Base sticker, 1-step corners |
+| `sticker-lg` | 3-step corners for big stickers |
+| `face-*` | Sticker colour + matching text colour |
+| `sticker-flat` | Removes the lip (pressed in, selected) |
+| `crooked` | Applies the resting `--p3d-tilt` |
+| `peel` | Hover lifts and straightens; press slaps |
+| `peel-3d` | A gentle 3D corner-peel for big stickers |
+| `focus-cut` | Focus turns the kiss-cut sky |
+| `focus-within-cut` | Same, for wrappers around inputs |
+| `sticker-disabled` | Blank, flat and still when disabled |
+| `pixel-icon` | Crisp pixel SVG rendering |
+| `pixel-rule` | 4px dotted pixel divider |
+| `overlay-motion` | Radix open/close: drop in, lift out |
+
+## Tilt
+
+Components that may sit crooked take a `tilt` prop: `"auto"` (a stable angle from React's `useId`, the same on server and client), a number of degrees, or `false` for straight.
+
+<Stage>
+  <TiltRow />
+</Stage>
+
+## Gotchas
+
+- **Never put `overflow: hidden` on a sticker.** It clips the stepped corners and the kiss-cut. Put an inner wrapper inside for scrolling.
+- **`filter` creates a stacking context.** Menus and popovers inside a sticker must portal out. Every pixel3d overlay already does.
+- **The kiss-cut sits 4px outside the box.** Leave at least 12px between stickers.
+- **No `rounded-*`.** Radius tokens are removed from the theme on purpose.
+
+<NextPage href="/docs/motion" title="Motion & physics" />
+
+</div>

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "card",
+  "title": "Card",
+  "description": "A big sticker with stepped corners: one heading, one line, one action.",
+  "dependencies": [],
+  "registryDependencies": [
+    "@pixel3d/pixel3d",
+    "@pixel3d/button"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/card.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { cn, useTilt, type Tilt } from \"@/lib/pixel3d\";\n\n/**\n * Card — a big sticker with stepped 3-step corners. `interactive` adds the 3D corner-peel.\n * Never nest cards (DESIGN.md). Keep to: media, one heading, one line, one action.\n */\nexport interface CardProps extends React.HTMLAttributes<HTMLDivElement> {\n  tilt?: Tilt;\n  interactive?: boolean;\n  face?: \"paper\" | \"pink\" | \"lime\" | \"sky\" | \"butter\" | \"ink\";\n}\n\nconst faces = {\n  paper: \"face-paper\",\n  pink: \"face-pink\",\n  lime: \"face-lime\",\n  sky: \"face-sky\",\n  butter: \"face-butter\",\n  ink: \"face-ink\",\n} as const;\n\nexport const Card = React.forwardRef<HTMLDivElement, CardProps>(\n  ({ className, tilt = false, interactive = false, face = \"paper\", style, ...props }, ref) => {\n    const tiltStyle = useTilt(tilt, 1.5);\n    return (\n      <div\n        ref={ref}\n        data-slot=\"card\"\n        style={{ ...tiltStyle, ...style }}\n        className={cn(\n          \"sticker sticker-lg flex flex-col gap-5 p-7\",\n          faces[face],\n          interactive ? \"peel-3d cursor-pointer\" : \"crooked\",\n          className\n        )}\n        {...props}\n      />\n    );\n  }\n);\nCard.displayName = \"Card\";\n\nexport const CardHeader = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (\n  <div data-slot=\"card-header\" className={cn(\"flex flex-col gap-2\", className)} {...p} />\n);\nexport const CardTitle = ({ className, ...p }: React.HTMLAttributes<HTMLHeadingElement>) => (\n  <h3 data-slot=\"card-title\" className={cn(\"text-2xl font-extrabold leading-tight tracking-[-0.02em]\", className)} {...p} />\n);\nexport const CardDescription = ({ className, ...p }: React.HTMLAttributes<HTMLParagraphElement>) => (\n  <p data-slot=\"card-description\" className={cn(\"text-base leading-relaxed opacity-80\", className)} {...p} />\n);\nexport const CardContent = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (\n  <div data-slot=\"card-content\" className={cn(\"flex flex-col gap-4\", className)} {...p} />\n);\nexport const CardFooter = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (\n  <div data-slot=\"card-footer\" className={cn(\"flex items-center justify-between gap-4\", className)} {...p} />\n);\n/** Full-bleed media area (image, three.js <Sticker3D/>, chart). */\nexport const CardMedia = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (\n  <div data-slot=\"card-media\" className={cn(\"-mx-3 -mt-3 overflow-hidden bg-lid-deep/40\", className)} {...p} />\n);\n",
+      "type": "registry:ui",
+      "target": "components/ui/card.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

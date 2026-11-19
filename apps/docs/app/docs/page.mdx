@@ -1,0 +1,49 @@
+import { Button, Input, Badge } from "@pixel3d/ui";
+import { Sticker3D } from "@pixel3d/ui/three";
+import { Stage, NextPage } from "@/components/mdx-parts";
+import { IntroToggles } from "@/components/guide-demos";
+
+export const metadata = { title: "Introduction" };
+
+<div className="prose-p3d intro-page">
+
+# pixel3d-ui
+
+Sticker UI for hackathons. Every component is a die-cut laptop sticker: pixel-stepped edges, a white kiss-cut border, and real 3D where it matters. Install one component in one command and your project looks finished on first render.
+
+<Stage tall>
+  <Sticker3D pattern="heart" className="size-40" />
+  <div className="flex w-full max-w-sm flex-col gap-6">
+    <Input label="Team name" placeholder="Null Pointers" />
+    <div className="flex flex-wrap items-center gap-5">
+      <Button>Ship it</Button>
+      <Button variant="secondary">Cancel</Button>
+      <Badge tone="sky">Track: AI</Badge>
+    </div>
+    <IntroToggles />
+  </div>
+</Stage>
+
+## What you get
+
+- **The full shadcn/ui set, as stickers.** Same APIs, same part names, same `data-slot` attributes. If you know shadcn, you already know pixel3d-ui.
+- **Physics instead of decoration.** Stickers peel up when you hover and slap down when you press. Checks land. Dialogs get stuck onto the screen.
+- **Real three.js.** One shared WebGL canvas draws voxel stickers, bursts and hero scenes anywhere in your layout, without eating a canvas per component.
+- **A hackathon kit.** Countdown, leaderboard, XP bars, pixel avatars, stepper, dropzone, team cards: the screens every hackathon project ends up needing.
+- **An anti-slop design floor.** No tiny text, few text spots, one ink per meaning. The rules live in [Design principles](/docs/principles).
+
+## Quick start
+
+1. Set up a Next.js app with Tailwind v4 and shadcn (`npx shadcn@latest init`).
+2. Add the pixel3d registry to `components.json` (see [Installation](/docs/installation)).
+3. Add components: `npx shadcn@latest add @pixel3d/button @pixel3d/input`.
+4. Optional, for 3D: `npx shadcn@latest add @pixel3d/sticker-3d` and wrap your layout in `<StickerCanvas>`.
+
+## How the docs are organised
+
+- **Guides** explain the system: the sticker material, motion, 3D, theming, accessibility, and a playbook for building a hackathon project fast.
+- **Components** each have live demos, the source of every demo, install commands, props, and do/don't notes.
+
+<NextPage href="/docs/installation" title="Installation" />
+
+</div>

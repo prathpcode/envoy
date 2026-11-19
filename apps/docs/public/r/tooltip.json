@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "tooltip",
+  "title": "Tooltip",
+  "description": "A small ink sticker with paper text that names an icon button.",
+  "dependencies": [
+    "radix-ui@1.8.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/tooltip.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { Tooltip as TooltipPrimitive } from \"radix-ui\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * Tooltip — a small ink sticker with paper text. Straight, 16px, never uppercase.\n * Wrap your app (or a region) in <TooltipProvider> once.\n */\nexport function TooltipProvider({ delayDuration = 200, ...props }: React.ComponentProps<typeof TooltipPrimitive.Provider>) {\n  return <TooltipPrimitive.Provider delayDuration={delayDuration} {...props} />;\n}\nTooltipProvider.displayName = \"TooltipProvider\";\n\nexport const Tooltip = TooltipPrimitive.Root;\nexport const TooltipTrigger = TooltipPrimitive.Trigger;\n\nexport const TooltipContent = React.forwardRef<\n  React.ComponentRef<typeof TooltipPrimitive.Content>,\n  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>\n>(({ className, sideOffset = 12, collisionPadding = 12, ...props }, ref) => (\n  <TooltipPrimitive.Portal>\n    <TooltipPrimitive.Content\n      ref={ref}\n      data-slot=\"tooltip-content\"\n      sideOffset={sideOffset}\n      collisionPadding={collisionPadding}\n      className={cn(\n        \"sticker face-ink tooltip-motion z-50 max-w-xs px-3 py-1.5 text-base font-bold leading-snug text-balance origin-(--radix-tooltip-content-transform-origin)\",\n        className\n      )}\n      {...props}\n    />\n  </TooltipPrimitive.Portal>\n));\nTooltipContent.displayName = \"TooltipContent\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/tooltip.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

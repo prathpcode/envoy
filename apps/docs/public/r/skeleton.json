@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "skeleton",
+  "title": "Skeleton",
+  "description": "A recessed lid block with a dithered pixel shimmer that sweeps across in steps.",
+  "dependencies": [],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/skeleton.tsx",
+      "content": "import * as React from \"react\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * Skeleton — a recessed lid-deep block with a dithered 2×2 pixel checker that sweeps\n * across in steps(). Notched pixel corners, never a smooth radius. Size it with\n * Tailwind (h-6 w-40, size-12). It is decoration, so it is aria-hidden: mark the\n * loading region itself with aria-busy.\n */\nexport const Skeleton = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(\n  ({ className, ...props }, ref) => (\n    <div\n      ref={ref}\n      data-slot=\"skeleton\"\n      aria-hidden\n      className={cn(\"skeleton-dither pixel-notch h-6 w-full\", className)}\n      {...props}\n    />\n  )\n);\nSkeleton.displayName = \"Skeleton\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/skeleton.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

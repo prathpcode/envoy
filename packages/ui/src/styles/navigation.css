@@ -1,0 +1,129 @@
+/* pixel3d-ui — navigation group styles (component-specific keyframes/utilities). */
+
+/* ── unfold: accordion + collapsible content hinges open from its top edge ── */
+@keyframes p3d-unfold {
+  0% { height: 0; opacity: 0; transform: perspective(700px) rotateX(-62deg); }
+  100% { height: var(--p3d-fold-h); opacity: 1; transform: perspective(700px) rotateX(0deg); }
+}
+@keyframes p3d-fold {
+  0% { height: var(--p3d-fold-h); opacity: 1; transform: perspective(700px) rotateX(0deg); }
+  100% { height: 0; opacity: 0; transform: perspective(700px) rotateX(-62deg); }
+}
+@utility unfold-motion {
+  overflow: hidden;
+  transform-origin: 50% 0;
+  /* no fill on open: once unfolded the height returns to auto and follows its content */
+  &[data-state="open"] { animation: p3d-unfold 340ms var(--ease-out-expo); }
+  &[data-state="closed"] { animation: p3d-fold 200ms ease-in forwards; }
+}
+@utility unfold-accordion { --p3d-fold-h: var(--radix-accordion-content-height); }
+@utility unfold-collapsible { --p3d-fold-h: var(--radix-collapsible-content-height); }
+
+/* ── a vertical 4px dotted pixel rule (pairs with pixel-rule) ── */
+@utility pixel-rule-y {
+  width: 4px;
+  background-image: linear-gradient(180deg, currentColor 50%, transparent 50%);
+  background-size: 4px 8px;
+}
+
+/* ── scroll-area thumb: an ink block with 2px stepped corners ── */
+@utility pixel-thumb {
+  background: transparent;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    background: var(--color-ink);
+    box-shadow:
+      0 -2px 0 0 var(--color-ink), 0 2px 0 0 var(--color-ink),
+      -2px 0 0 0 var(--color-ink), 2px 0 0 0 var(--color-ink);
+  }
+}
+
+/* ── mark: a pink highlighter sticker behind inline text ── */
+@utility mark-sticker {
+  background: var(--color-pink);
+  color: var(--color-ink);
+  padding: 0 0.2em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  filter:
+    drop-shadow(4px 0 0 var(--p3d-cut)) drop-shadow(-4px 0 0 var(--p3d-cut))
+    drop-shadow(0 4px 0 var(--p3d-cut)) drop-shadow(0 -4px 0 var(--p3d-cut))
+    drop-shadow(0 3px 3px rgb(var(--p3d-shadow) / 0.24));
+}
+
+/* ── sidebar: the mobile panel slides in from the left ── */
+@utility sidebar-slide {
+  transition: transform 320ms var(--ease-out-expo), visibility 0s linear 320ms;
+  &[data-state="closed"] { transform: translateX(calc(-100% - 24px)); visibility: hidden; }
+  &[data-state="open"] { transform: translateX(0); visibility: visible; transition-delay: 0s; }
+}
+
+/* ── button group: buttons fused into one straight sticker strip ──
+ * Unlayered on purpose: it has to beat the buttons' own peel/tilt utilities.
+ * Each child keeps its ink face but drops its own kiss-cut; the group draws one cut
+ * around the whole strip. Only the two outer ends keep their stepped notches. */
+[data-slot="button-group"] > * {
+  filter: none;
+  transform: none;
+  --p3d-tilt: 0deg;
+  transition: transform 90ms;
+}
+[data-slot="button-group"] > *::before {
+  inset: 0;
+  box-shadow: none;
+  transition: filter 120ms;
+}
+[data-slot="button-group"] > :hover:not(:disabled):not([aria-disabled="true"])::before { filter: brightness(0.92); }
+[data-slot="button-group"] > :active:not(:disabled):not([aria-disabled="true"]) { transform: translateY(1px); }
+[data-slot="button-group"] > :active:not(:disabled):not([aria-disabled="true"])::before { filter: brightness(0.85); }
+[data-slot="button-group"]:has(:focus-visible) { --p3d-cut: var(--color-sky); }
+
+/* outer ends keep the 1-step notch */
+[data-slot="button-group"][data-orientation="horizontal"] > :first-child::before {
+  inset: 4px 0 4px 4px;
+  box-shadow: 0 -4px 0 0 var(--face), 0 4px 0 0 var(--face), -4px 0 0 0 var(--face);
+}
+[data-slot="button-group"][data-orientation="horizontal"] > :last-child::before {
+  inset: 4px 4px 4px 0;
+  box-shadow: 0 -4px 0 0 var(--face), 0 4px 0 0 var(--face), 4px 0 0 0 var(--face);
+}
+[data-slot="button-group"][data-orientation="vertical"] > :first-child::before {
+  inset: 4px 4px 0 4px;
+  box-shadow: 0 -4px 0 0 var(--face), -4px 0 0 0 var(--face), 4px 0 0 0 var(--face);
+}
+[data-slot="button-group"][data-orientation="vertical"] > :last-child::before {
+  inset: 0 4px 4px 4px;
+  box-shadow: 0 4px 0 0 var(--face), -4px 0 0 0 var(--face), 4px 0 0 0 var(--face);
+}
+[data-slot="button-group"] > :only-child::before {
+  inset: 4px;
+  box-shadow:
+    0 -4px 0 0 var(--face), 0 4px 0 0 var(--face),
+    -4px 0 0 0 var(--face), 4px 0 0 0 var(--face);
+}
+
+/* ink pixel dividers between segments */
+[data-slot="button-group"] > * + *::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  color: var(--color-ink);
+}
+[data-slot="button-group"][data-orientation="horizontal"] > * + *::after {
+  left: -2px;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  background-image: linear-gradient(180deg, currentColor 50%, transparent 50%);
+  background-size: 4px 8px;
+}
+[data-slot="button-group"][data-orientation="vertical"] > * + *::after {
+  top: -2px;
+  left: 8px;
+  right: 8px;
+  height: 4px;
+  background-image: linear-gradient(90deg, currentColor 50%, transparent 50%);
+  background-size: 8px 4px;
+}

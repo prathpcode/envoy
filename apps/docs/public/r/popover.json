@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "popover",
+  "title": "Popover",
+  "description": "A straight paper sticker that drops in next to its trigger, for small tasks that keep the page in view.",
+  "dependencies": [
+    "radix-ui@1.8.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/popover.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { Popover as PopoverPrimitive } from \"radix-ui\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * Popover — a straight paper sticker that drops in next to its trigger. Portaled, so it is\n * never trapped inside a sticker's filter stacking context.\n */\nexport const Popover = PopoverPrimitive.Root;\nexport const PopoverTrigger = PopoverPrimitive.Trigger;\nexport const PopoverAnchor = PopoverPrimitive.Anchor;\nexport const PopoverClose = PopoverPrimitive.Close;\n\nexport const PopoverContent = React.forwardRef<\n  React.ComponentRef<typeof PopoverPrimitive.Content>,\n  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>\n>(({ className, align = \"center\", sideOffset = 12, collisionPadding = 16, ...props }, ref) => (\n  <PopoverPrimitive.Portal>\n    <PopoverPrimitive.Content\n      ref={ref}\n      data-slot=\"popover-content\"\n      align={align}\n      sideOffset={sideOffset}\n      collisionPadding={collisionPadding}\n      className={cn(\n        \"sticker sticker-lg face-paper overlay-motion z-50 flex w-80 flex-col gap-4 p-6 outline-none origin-(--radix-popover-content-transform-origin)\",\n        className\n      )}\n      {...props}\n    />\n  </PopoverPrimitive.Portal>\n));\nPopoverContent.displayName = \"PopoverContent\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/popover.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

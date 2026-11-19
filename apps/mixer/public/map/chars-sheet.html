@@ -1,0 +1,21 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Mixer characters</title>
+<style>body{margin:0;background:#cdd1d8;font:700 14px system-ui;padding:16px}canvas{image-rendering:pixelated;margin:4px;background:#e8dccb}.row{display:flex;align-items:flex-end;gap:2px;margin-bottom:6px}span{width:110px}</style>
+</head><body>
+<script type="module">
+import { traits, drawChar, FOOT } from "./chars.js";
+const names = ["Priya Raman","Dev Okafor","Lena Fischer","Marcus Chen","Aiko Tanaka","Sam Rivera","Noor Haddad","Jonah Brooks","Inés Morales","Tariq Aziz","Alex Park","Mixer"];
+const cell = 4;
+const cfgs = [["front",false,-1],["front",false,0],["front",false,1],["front",false,3],["side",false,-1],["side",false,0],["side",false,1],["side",false,3],["back",false,1],["side",false,-2],["front",false,-2]];
+for (const n of names) {
+  const row = document.createElement("div"); row.className = "row";
+  const l = document.createElement("span"); l.textContent = n; row.appendChild(l);
+  const t = traits(n);
+  for (const [view, flip, frame] of cfgs) {
+    const c = document.createElement("canvas"); c.width = FOOT.w * cell; c.height = FOOT.h * cell;
+    drawChar(c.getContext("2d"), t, { view, flip, frame, talk: frame === -2 }, cell); row.appendChild(c);
+  }
+  document.body.appendChild(row);
+}
+document.title = "ready";
+</script></body></html>

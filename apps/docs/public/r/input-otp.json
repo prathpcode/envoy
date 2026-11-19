@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "input-otp",
+  "title": "Input OTP",
+  "description": "One square sticker per character; the active one cuts sky with a pink caret and each digit slaps in.",
+  "dependencies": [
+    "input-otp@1.5.0",
+    "pixelarticons@2.4.2"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/input-otp.tsx",
+      "content": "\"use client\";\r\nimport * as React from \"react\";\r\nimport { OTPInput, OTPInputContext } from \"input-otp\";\r\nimport { Minus } from \"pixelarticons/react\";\r\nimport { cn } from \"@/lib/pixel3d\";\r\n\r\nexport { REGEXP_ONLY_DIGITS, REGEXP_ONLY_CHARS, REGEXP_ONLY_DIGITS_AND_CHARS } from \"input-otp\";\r\n\r\n/**\r\n * InputOTP — every slot is a square paper sticker. The active slot's kiss-cut turns sky with a\r\n * pink block caret; each filled slot slaps down. Built on `input-otp` (shadcn API).\r\n *\r\n *   <InputOTP maxLength={6}><InputOTPGroup><InputOTPSlot index={0} />…</InputOTPGroup></InputOTP>\r\n */\r\nexport const InputOTP = React.forwardRef<\r\n  React.ComponentRef<typeof OTPInput>,\r\n  React.ComponentPropsWithoutRef<typeof OTPInput>\r\n>(({ className, containerClassName, ...props }, ref) => (\r\n  <OTPInput\r\n    ref={ref}\r\n    data-slot=\"input-otp\"\r\n    containerClassName={cn(\"flex items-center gap-3 has-[:disabled]:opacity-60\", containerClassName)}\r\n    className={cn(\"disabled:cursor-not-allowed\", className)}\r\n    {...props}\r\n  />\r\n));\r\nInputOTP.displayName = \"InputOTP\";\r\n\r\nexport const InputOTPGroup = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<\"div\">>(\r\n  ({ className, ...props }, ref) => (\r\n    <div ref={ref} data-slot=\"input-otp-group\" className={cn(\"flex items-center gap-2 sm:gap-3\", className)} {...props} />\r\n  )\r\n);\r\nInputOTPGroup.displayName = \"InputOTPGroup\";\r\n\r\nexport const InputOTPSlot = React.forwardRef<\r\n  HTMLDivElement,\r\n  React.ComponentPropsWithoutRef<\"div\"> & { index: number }\r\n>(({ index, className, ...props }, ref) => {\r\n  const ctx = React.useContext(OTPInputContext);\r\n  const slot = ctx?.slots[index];\r\n  const char = slot?.char ?? null;\r\n  const isActive = slot?.isActive ?? false;\r\n  const hasFakeCaret = slot?.hasFakeCaret ?? false;\r\n  return (\r\n    <div\r\n      ref={ref}\r\n      data-slot=\"input-otp-slot\"\r\n      data-active={isActive || undefined}\r\n      data-filled={char ? true : undefined}\r\n      className={cn(\"relative size-11 shrink-0 sm:size-14\", className)}\r\n      {...props}\r\n    >\r\n      {/* keyed so a fresh character remounts the sticker and it slaps down */}\r\n      <div\r\n        key={char ? `f-${char}` : \"empty\"}\r\n        className={cn(\r\n          \"sticker face-paper absolute inset-0 grid place-items-center text-[28px] font-extrabold leading-none tabular-nums text-ink\",\r\n          isActive && \"[--p3d-cut:var(--color-sky)]\",\r\n          char && \"animate-slap\"\r\n        )}\r\n      >\r\n        {char}\r\n        {hasFakeCaret && (\r\n          <span aria-hidden className=\"pointer-events-none absolute inset-0 grid place-items-center\">\r\n            <span className=\"h-8 w-3 bg-pink animate-caret-blink\" />\r\n          </span>\r\n        )}\r\n      </div>\r\n    </div>\r\n  );\r\n});\r\nInputOTPSlot.displayName = \"InputOTPSlot\";\r\n\r\nexport const InputOTPSeparator = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<\"div\">>(\r\n  ({ className, ...props }, ref) => (\r\n    <div\r\n      ref={ref}\r\n      role=\"separator\"\r\n      data-slot=\"input-otp-separator\"\r\n      className={cn(\"flex text-on-lid-soft\", className)}\r\n      {...props}\r\n    >\r\n      <Minus className=\"pixel-icon size-6\" aria-hidden />\r\n    </div>\r\n  )\r\n);\r\nInputOTPSeparator.displayName = \"InputOTPSeparator\";\r\n",
+      "type": "registry:ui",
+      "target": "components/ui/input-otp.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

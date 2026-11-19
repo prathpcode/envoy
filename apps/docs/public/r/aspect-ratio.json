@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "aspect-ratio",
+  "title": "Aspect Ratio",
+  "description": "Holds media to a fixed shape inside its sticker.",
+  "dependencies": [
+    "radix-ui@1.8.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d",
+    "@pixel3d/button"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/aspect-ratio.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { AspectRatio as AspectRatioPrimitive } from \"radix-ui\";\n\n/**\n * AspectRatio — holds media to a ratio (Radix). It clips its content, so it goes\n * *inside* a sticker, never on the sticker element itself.\n */\nexport const AspectRatio = React.forwardRef<\n  React.ComponentRef<typeof AspectRatioPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof AspectRatioPrimitive.Root>\n>((props, ref) => <AspectRatioPrimitive.Root ref={ref} data-slot=\"aspect-ratio\" {...props} />);\nAspectRatio.displayName = \"AspectRatio\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/aspect-ratio.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

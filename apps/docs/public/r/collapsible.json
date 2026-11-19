@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "collapsible",
+  "title": "Collapsible",
+  "description": "Shows and hides a region with the same top-edge hinge as Accordion.",
+  "dependencies": [
+    "radix-ui@1.8.1"
+  ],
+  "registryDependencies": [
+    "@pixel3d/pixel3d",
+    "@pixel3d/button"
+  ],
+  "files": [
+    {
+      "path": "registry-src/components/collapsible.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { Collapsible as CollapsiblePrimitive } from \"radix-ui\";\nimport { cn } from \"@/lib/pixel3d\";\n\n/**\n * Collapsible — a thin wrapper over Radix Collapsible. The content hinges open from its\n * top edge with the same unfold motion as Accordion. Bring your own trigger (a Button).\n */\nexport const Collapsible = React.forwardRef<\n  React.ComponentRef<typeof CollapsiblePrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof CollapsiblePrimitive.Root>\n>((props, ref) => <CollapsiblePrimitive.Root ref={ref} data-slot=\"collapsible\" {...props} />);\nCollapsible.displayName = \"Collapsible\";\n\nexport const CollapsibleTrigger = React.forwardRef<\n  React.ComponentRef<typeof CollapsiblePrimitive.Trigger>,\n  React.ComponentPropsWithoutRef<typeof CollapsiblePrimitive.Trigger>\n>((props, ref) => <CollapsiblePrimitive.Trigger ref={ref} data-slot=\"collapsible-trigger\" {...props} />);\nCollapsibleTrigger.displayName = \"CollapsibleTrigger\";\n\nexport const CollapsibleContent = React.forwardRef<\n  React.ComponentRef<typeof CollapsiblePrimitive.Content>,\n  React.ComponentPropsWithoutRef<typeof CollapsiblePrimitive.Content>\n>(({ className, ...props }, ref) => (\n  <CollapsiblePrimitive.Content\n    ref={ref}\n    data-slot=\"collapsible-content\"\n    className={cn(\"unfold-motion unfold-collapsible\", className)}\n    {...props}\n  />\n));\nCollapsibleContent.displayName = \"CollapsibleContent\";\n",
+      "type": "registry:ui",
+      "target": "components/ui/collapsible.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}
