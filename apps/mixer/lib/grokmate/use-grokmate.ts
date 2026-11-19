@@ -5,7 +5,13 @@ import { empty, reduce, edgeState, type GrokmateEvent, type State } from "./stor
 export const RELAY =
   process.env.NEXT_PUBLIC_RELAY_URL ?? (typeof window === "undefined" ? "http://localhost:8787" : `http://${window.location.hostname}:8787`);
 
-export type Row = { userId: string; name: string; points: number };
+/** Every conversation in the ask has reached a verdict. */
+const askDone = (s: State, askId?: string) => {
+  const ids = askId ? s.asks[askId]?.convIds : undefined;
+  return !!ids?.length && ids.every((id) => s.convs[id]?.verdict);
+};
+
+export type Row ={ userId: string; name: string; points: number };
 type Snapshot = { me?: { id: string; name: string } | null; leaderboard: Row[] };
 
 export async function api(path: string, as: string, method = "GET", body?: unknown) {
@@ -51,7 +57,9 @@ export function useGrokmate(as: string | null, frame: React.RefObject<HTMLIFrame
   React.useEffect(() => {
     if (!as) return;
     const es = new EventSource(`${RELAY}/events?as=${encodeURIComponent(as)}`);
+    const clears = new Set<ReturnType<typeof setTimeout>>();
     es.onopen = () => {
+      for (const t of clears) clearTimeout(t); clears.clear();
       // a fresh connection replays from the start, so start from nothing
       live.current = empty(); setState(live.current); post({ type: "grokmate:reset" }); setOnline(true); refreshBoard();
     };
@@ -74,8 +82,15 @@ export function useGrokmate(as: string | null, frame: React.RefObject<HTMLIFrame
         post({ type: "grokmate:reveal", askId: e.askId, alias: e.alias, asker: e.asker.name, offerer: e.offerer.name });
       }
       if (e.type === "karma.changed") { refreshBoard(); if (fresh && e.userId === as) setLastKarma({ delta: e.delta, at: Date.now() }); }
+      // once the asker's bot has heard back from every candidate, its huddle breaks up and leaves the map.
+      // live, let the last verdict colour show for a beat first; on replay, clear straight away
+      if (e.type === "conv.verdict" && askDone(s, e.askId ?? s.convs[e.convId]?.askId)) {
+        const askId = e.askId ?? s.convs[e.convId].askId;
+        if (!fresh) post({ type: "grokmate:clearAsk", askId });
+        else { const t = setTimeout(() => { clears.delete(t); if (askDone(live.current, askId)) post({ type: "grokmate:clearAsk", askId }); }, 2500); clears.add(t); }
+      }
     };
-    return () => { es.close(); setOnline(false); };
+    return () => { es.close(); setOnline(false); for (const t of clears) clearTimeout(t); clears.clear(); };
   }, [as, post, refreshBoard]);
 
   return { state, board, online, lastKarma, post, refreshBoard };

@@ -290,7 +290,7 @@ addEventListener("message", (e) => {
   if (m.type === "grokmate:hello") parent.postMessage({ type: "grokmate:ready" }, "*");
   if (m.type === "grokmate:nodes") m.nodes.forEach(addNode);
   if (m.type === "grokmate:ask") { addAsk(m); if (m.fly) flyTo(...asks.get(m.askId).c, 0.75); }
-  if (m.type === "grokmate:edge") { const e0 = edges.get(m.convId); if (e0) e0.state = m.state; else edges.set(m.convId, { askId: m.askId, alias: m.alias, state: m.state, pulses: [] }); }
+  if (m.type === "grokmate:edge") { const e0 = edges.get(m.convId); if (e0) e0.state = m.state; else if (asks.has(m.askId)) edges.set(m.convId, { askId: m.askId, alias: m.alias, state: m.state, pulses: [] }); }
   if (m.type === "grokmate:pulse") edges.get(m.convId)?.pulses.push({ at: performance.now(), fromAsker: m.fromAsker, withheld: m.withheld });
   if (m.type === "grokmate:link") { if (!links.some(([a, b]) => a === m.a && b === m.b)) links.push([m.a, m.b]); for (const id of [m.a, m.b]) { const n = nodes.get(id); if (n && !n.me) n.friend = true; } }
   if (m.type === "grokmate:reveal") {
