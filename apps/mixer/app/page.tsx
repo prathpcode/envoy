@@ -1,5 +1,5 @@
-import { EnvoyApp } from "@/components/envoy/app";
+import { GrokmateApp } from "@/components/grokmate/app";
 
 export default function Page() {
-  return <EnvoyApp />;
+  return <GrokmateApp />;
 }

@@ -1,4 +1,4 @@
-// Envoy client state: a pure fold over the relay's event stream (apps/relay/PROTOCOL.md).
+// Grokmate client state: a pure fold over the relay's event stream (apps/relay/PROTOCOL.md).
 // Nothing here knows more than the relay sent this viewer, so anonymity is not this file's job to keep.
 
 export type AskKind = "study" | "teammate" | "coffee" | "cofounder" | "advice";
@@ -24,11 +24,11 @@ export type State = {
   users: Record<string, User>; asks: Record<string, Ask>; convs: Record<string, Conv>;
   matches: Record<string, Match>; meetings: Record<string, Meeting>; askOrder: string[];
 };
-export type EnvoyEvent = { seq: number; type: string; at: number | string } & Record<string, any>;
+export type GrokmateEvent = { seq: number; type: string; at: number | string } & Record<string, any>;
 
 export const empty = (): State => ({ users: {}, asks: {}, convs: {}, matches: {}, meetings: {}, askOrder: [] });
 
-export function reduce(s: State, e: EnvoyEvent): State {
+export function reduce(s: State, e: GrokmateEvent): State {
   const ask = (id: string, patch: Partial<Ask>) => (s.asks[id] ? { ...s.asks, [id]: { ...s.asks[id], ...patch } } : s.asks);
   const conv = (id: string, f: (c: Conv) => Conv) => (s.convs[id] ? { ...s.convs, [id]: f(s.convs[id]) } : s.convs);
   switch (e.type) {

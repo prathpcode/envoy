@@ -47,7 +47,7 @@ test("happy path: ask, round, approvals, reveal, meeting, follow-through, karma"
     await R.call(`/meetings/${meeting.meetingId}/approve`, "u_you", "POST");
     await me.until((e) => e.type === "meeting.scheduled");
     const ics = await fetch(`http://localhost:${R.server.address().port}/meetings/${meeting.meetingId}/invite.ics?as=u_you`);
-    assert.match(await ics.text(), /BEGIN:VEVENT[\s\S]*SUMMARY:Envoy/);
+    assert.match(await ics.text(), /BEGIN:VEVENT[\s\S]*SUMMARY:Grokmate/);
     assert.equal((await R.call(`/meetings/${meeting.meetingId}/invite.ics`, "u_dev")).status, 403);
 
     await R.call("/demo/clock", "u_you", "POST", { advance: "slot" });

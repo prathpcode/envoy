@@ -5,8 +5,8 @@ import {
   Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, Switch, ToggleGroup, ToggleGroupItem, toast,
 } from "@pixel3d/ui";
 import { CharAvatar } from "@/components/char-avatar";
-import { api, type Row } from "@/lib/envoy/use-envoy";
-import { KIND_LABEL, TOPIC_LABEL, type User } from "@/lib/envoy/store";
+import { api, type Row } from "@/lib/grokmate/use-grokmate";
+import { KIND_LABEL, TOPIC_LABEL, type User } from "@/lib/grokmate/store";
 
 const fail = (e: Error) => toast.error(e.message);
 

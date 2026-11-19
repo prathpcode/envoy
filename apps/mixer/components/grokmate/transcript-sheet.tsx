@@ -2,7 +2,7 @@
 import * as React from "react";
 import { Lock } from "pixelarticons/react";
 import { Badge, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@pixel3d/ui";
-import { TOPIC_LABEL, type Ask, type Conv } from "@/lib/envoy/store";
+import { TOPIC_LABEL, type Ask, type Conv } from "@/lib/grokmate/store";
 
 /** One bot-to-bot conversation, live. What a bot declined to share shows as a grey line, never as text. */
 export function TranscriptSheet({ conv, ask, onClose }: { conv?: Conv; ask?: Ask; onClose: () => void }) {

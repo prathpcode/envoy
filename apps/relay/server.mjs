@@ -1,4 +1,4 @@
-// Envoy relay: network state, the bus between Bots, and the redacted event stream. See PROTOCOL.md.
+// Grokmate relay: network state, the bus between Bots, and the redacted event stream. See PROTOCOL.md.
 import http from "node:http";
 import { inferAsk, scout, finalize, promote, karmaFor } from "./rules.mjs";
 import { scripted, webhookDriver, xaiDriver, botHooks, resolveBotTurn, enforce, scoreFit } from "./bots.mjs";
@@ -236,8 +236,8 @@ export function createRelay() {
   }
   function ics(mt) {
     const z = (d) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, ""), start = new Date(mt.slot), end = new Date(start.getTime() + 30 * 60000);
-    return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Envoy//Relay//EN", "BEGIN:VEVENT", `UID:${mt.id}@envoy`, `DTSTAMP:${z(new Date())}`, `DTSTART:${z(start)}`, `DTEND:${z(end)}`,
-      "SUMMARY:Envoy: meet your match", `DESCRIPTION:${`${mt.brief.why} Talk about: ${mt.brief.talkAbout.join(", ")}`.replace(/[,;\\]/g, (c) => `\\${c}`)}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+    return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Grokmate//Relay//EN", "BEGIN:VEVENT", `UID:${mt.id}@grokmate`, `DTSTAMP:${z(new Date())}`, `DTSTART:${z(start)}`, `DTEND:${z(end)}`,
+      "SUMMARY:Grokmate: meet your match", `DESCRIPTION:${`${mt.brief.why} Talk about: ${mt.brief.talkAbout.join(", ")}`.replace(/[,;\\]/g, (c) => `\\${c}`)}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
   }
 
   // ---- HTTP ----
@@ -292,7 +292,7 @@ export function createRelay() {
       const mt = need(S.meetings, parts[1], "meeting");
       if (M === "GET" && parts[2] === "invite.ics") {
         if (!roleIn(mt, as)) throw Object.assign(new Error("Not your meeting"), { code: 403 });
-        res.writeHead(200, { ...CORS, "content-type": "text/calendar", "content-disposition": 'attachment; filename="envoy.ics"' }); return res.end(ics(mt));
+        res.writeHead(200, { ...CORS, "content-type": "text/calendar", "content-disposition": 'attachment; filename="grokmate.ics"' }); return res.end(ics(mt));
       }
       if (M === "POST" && parts[2] === "approve") approveMeeting(mt, member());
       if (M === "POST" && parts[2] === "confirm") confirmMeeting(mt, member(), body.happened, body.helpful);
@@ -319,5 +319,5 @@ export function createRelay() {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const port = env("PORT", 8787);
-  createRelay().listen(port, () => console.log(`Envoy relay on http://localhost:${port}`));
+  createRelay().listen(port, () => console.log(`Grokmate relay on http://localhost:${port}`));
 }

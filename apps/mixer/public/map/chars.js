@@ -42,7 +42,7 @@ export function traits(name) {
   };
 }
 
-// A masked envoy: the same blank figure for everyone, so nothing about it points back to a person.
+// A masked grokmate: the same blank figure for everyone, so nothing about it points back to a person.
 // The asker's envoy wears ink so the ring has a visible centre.
 const MASK = ["#f4f4f6", "#cfd0d6", "#6f727a"], CLOAK = ["#8a8f9a", "#6e737e", "#3b3e45"], CLOAK_INK = ["#3a3d46", "#2a2c33", "#121317"];
 export function maskTraits(asker) {

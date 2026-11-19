@@ -3,7 +3,7 @@ import * as React from "react";
 import { Trophy, Contact, Sliders } from "pixelarticons/react";
 import { Badge, Button, toast } from "@pixel3d/ui";
 import { fireStickerBurst } from "@pixel3d/ui/three";
-import { useEnvoy } from "@/lib/envoy/use-envoy";
+import { useGrokmate } from "@/lib/grokmate/use-grokmate";
 import { AskPanel } from "./ask-panel";
 import { TranscriptSheet } from "./transcript-sheet";
 import { KarmaSheet, PersonSheet, DemoDesk } from "./sheets";
@@ -11,11 +11,11 @@ import { KarmaSheet, PersonSheet, DemoDesk } from "./sheets";
 const tilt = (deg: number) => ({ ["--p3d-tilt" as string]: `${deg}deg` }) as React.CSSProperties;
 
 /** The whole app: the campus is the ground, and everything else is a sticker on top of it. */
-export function EnvoyApp() {
+export function GrokmateApp() {
   const frame = React.useRef<HTMLIFrameElement>(null);
   const [as, setAs] = React.useState<string | null>(null);
   React.useEffect(() => { setAs(new URLSearchParams(window.location.search).get("as") ?? "u_you"); }, []);
-  const { state, board, online, lastKarma, post, refreshBoard } = useEnvoy(as, frame);
+  const { state, board, online, lastKarma, post, refreshBoard } = useGrokmate(as, frame);
 
   const [openConv, setOpenConv] = React.useState<string | null>(null);
   const [person, setPerson] = React.useState<string | null>(null);
@@ -25,8 +25,8 @@ export function EnvoyApp() {
   // taps on the map: an edge or an envoy opens its conversation, a person opens their card
   React.useEffect(() => {
     const onMsg = (e: MessageEvent) => {
-      if (e.data?.type === "envoy:tapEdge") setOpenConv(e.data.convId);
-      if (e.data?.type === "envoy:tapNode" && e.data.id) setPerson(e.data.id);
+      if (e.data?.type === "grokmate:tapEdge") setOpenConv(e.data.convId);
+      if (e.data?.type === "grokmate:tapNode" && e.data.id) setPerson(e.data.id);
     };
     addEventListener("message", onMsg);
     return () => removeEventListener("message", onMsg);
@@ -56,9 +56,9 @@ export function EnvoyApp() {
       <div className="hud pointer-events-none absolute inset-0">
         <section className="absolute left-4 top-6 flex max-h-[calc(100dvh-3rem)] w-[calc(100%-2rem)] max-w-[460px] flex-col md:left-8 md:top-8">
           <span className="sticker face-ink crooked relative z-10 -mb-5 ml-6 self-start px-5 py-2 text-xl font-extrabold tracking-tight" style={tilt(-2.5)}>
-            Envoy
+            Grokmate
           </span>
-          {as && <AskPanel as={as} state={state} online={online} onOpenConv={setOpenConv} onFocusAsk={(askId) => post({ type: "envoy:focus", askId })} />}
+          {as && <AskPanel as={as} state={state} online={online} onOpenConv={setOpenConv} onFocusAsk={(askId) => post({ type: "grokmate:focus", askId })} />}
         </section>
 
         <nav className="absolute right-4 top-6 flex flex-wrap items-center justify-end gap-4 md:right-8 md:top-8" aria-label="Network">

@@ -1,4 +1,4 @@
-// Envoy's rules as pure functions: no clock, no network, no state. See PROTOCOL.md.
+// Grokmate's rules as pure functions: no clock, no network, no state. See PROTOCOL.md.
 
 const STOP = new Set("a an and the for this that these those with from into about are was were has have had who whom will would can could should may might need needs want wants find looking look get got any anyone some someone her his him its our your their them they she you it's me my mine be been being not but too also just than then when what which how why where there here taken talk talks".split(" "));
 

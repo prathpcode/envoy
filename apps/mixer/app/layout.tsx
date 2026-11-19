@@ -11,7 +11,7 @@ const bricolage = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Envoy · your bot asks the campus",
+  title: "Grokmate · your bot asks the campus",
   description: "Your bot talks to other students' bots anonymously, and you are revealed to each other only when both sides are a fit.",
 };
 

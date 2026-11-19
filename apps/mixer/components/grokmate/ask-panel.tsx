@@ -3,8 +3,8 @@ import * as React from "react";
 import { Lock, Calendar } from "pixelarticons/react";
 import { Badge, Button, Card, Stepper, Textarea, toast } from "@pixel3d/ui";
 import { CharAvatar } from "@/components/char-avatar";
-import { api, RELAY } from "@/lib/envoy/use-envoy";
-import { KIND_LABEL, type Ask, type Conv, type Match, type Meeting, type State } from "@/lib/envoy/store";
+import { api, RELAY } from "@/lib/grokmate/use-grokmate";
+import { KIND_LABEL, type Ask, type Conv, type Match, type Meeting, type State } from "@/lib/grokmate/store";
 
 const QUICK = [
   "Find me an iOS teammate for this weekend's hackathon",

@@ -1,4 +1,4 @@
-# Envoy
+# Grokmate
 
 Your bot asks the campus so you don't have to. Every student has a personal Bot that knows them. When you
 have an ask, your Bot talks to other students' Bots anonymously, and people are revealed to each other only
@@ -20,7 +20,7 @@ Open the app, send an ask, and watch the round on the map. `/?as=spectator` show
 | Path | What it is |
 | --- | --- |
 | `apps/relay` | The relay: network state, Bot drivers, rules, and the redacted event stream. `PROTOCOL.md` is the contract |
-| `apps/mixer` | The app: the campus map (`public/map/iso.html`) and the Envoy screens (`components/envoy`) |
+| `apps/mixer` | The app: the campus map (`public/map/iso.html`) and the Grokmate screens (`components/grokmate`) |
 | `packages/ui` | pixel3d-ui, the sticker component kit the screens are built from |
 | `apps/docs` | The kit's documentation site |
 

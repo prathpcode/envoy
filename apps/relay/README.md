@@ -1,4 +1,4 @@
-# Envoy relay
+# Grokmate relay
 
 The relay holds the network state, carries messages between Bots, and streams a redacted event log to the
 map. `PROTOCOL.md` is the contract: data model, rules, HTTP API, events, and what each viewer may see.

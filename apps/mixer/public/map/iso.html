@@ -144,7 +144,7 @@ function token(name, x, y, t) {
 // an envoy wears a real character only when this viewer is allowed to know whose it is; otherwise a stand-in
 function dress(b) {
   const name = b.revealed ?? (b.you ? meName : null);
-  b.t = traits(name ?? "envoy:" + b.standIn); b.key = "";
+  b.t = traits(name ?? "grokmate:" + b.standIn); b.key = "";
 }
 function envoy(alias, x, y, you, convId, askId) {
   const b = Object.assign(token(alias, x, y, null), { alias, you: !!you, masked: true, convId, standIn: convId ?? askId + ":" + alias });
@@ -287,22 +287,22 @@ function flyTo(x, y, zoom) { anchor = null; if (zoom && sTo < zoom) sTo = zoom; 
 // ---- messages from the app ----
 addEventListener("message", (e) => {
   const m = e.data || {};
-  if (m.type === "envoy:hello") parent.postMessage({ type: "envoy:ready" }, "*");
-  if (m.type === "envoy:nodes") m.nodes.forEach(addNode);
-  if (m.type === "envoy:ask") { addAsk(m); if (m.fly) flyTo(...asks.get(m.askId).c, 0.75); }
-  if (m.type === "envoy:edge") { const e0 = edges.get(m.convId); if (e0) e0.state = m.state; else edges.set(m.convId, { askId: m.askId, alias: m.alias, state: m.state, pulses: [] }); }
-  if (m.type === "envoy:pulse") edges.get(m.convId)?.pulses.push({ at: performance.now(), fromAsker: m.fromAsker, withheld: m.withheld });
-  if (m.type === "envoy:link") { if (!links.some(([a, b]) => a === m.a && b === m.b)) links.push([m.a, m.b]); for (const id of [m.a, m.b]) { const n = nodes.get(id); if (n && !n.me) n.friend = true; } }
-  if (m.type === "envoy:reveal") {
+  if (m.type === "grokmate:hello") parent.postMessage({ type: "grokmate:ready" }, "*");
+  if (m.type === "grokmate:nodes") m.nodes.forEach(addNode);
+  if (m.type === "grokmate:ask") { addAsk(m); if (m.fly) flyTo(...asks.get(m.askId).c, 0.75); }
+  if (m.type === "grokmate:edge") { const e0 = edges.get(m.convId); if (e0) e0.state = m.state; else edges.set(m.convId, { askId: m.askId, alias: m.alias, state: m.state, pulses: [] }); }
+  if (m.type === "grokmate:pulse") edges.get(m.convId)?.pulses.push({ at: performance.now(), fromAsker: m.fromAsker, withheld: m.withheld });
+  if (m.type === "grokmate:link") { if (!links.some(([a, b]) => a === m.a && b === m.b)) links.push([m.a, m.b]); for (const id of [m.a, m.b]) { const n = nodes.get(id); if (n && !n.me) n.friend = true; } }
+  if (m.type === "grokmate:reveal") {
     const a = asks.get(m.askId);
     for (const [alias, name] of [["Asker", m.asker], [m.alias, m.offerer]]) { const b = a?.envoys.get(alias); if (b && name) { b.revealed = name; dress(b); } }
   }
-  if (m.type === "envoy:clearAsk") { asks.delete(m.askId); for (const [k, v] of edges) if (v.askId === m.askId) edges.delete(k); }
-  if (m.type === "envoy:focus") {
+  if (m.type === "grokmate:clearAsk") { asks.delete(m.askId); for (const [k, v] of edges) if (v.askId === m.askId) edges.delete(k); }
+  if (m.type === "grokmate:focus") {
     const n = m.id ? nodes.get(m.id) : null, a = m.askId ? asks.get(m.askId) : null;
     if (n) { selected = n.id; flyTo(n.x, n.y, 0.8); } else if (a) flyTo(a.c[0], a.c[1], 0.75);
   }
-  if (m.type === "envoy:reset") { nodes.clear(); asks.clear(); edges.clear(); links.length = 0; selected = null; meName = null; }
+  if (m.type === "grokmate:reset") { nodes.clear(); asks.clear(); edges.clear(); links.length = 0; selected = null; meName = null; }
 });
 
 // ---- interaction: drag pans, wheel or pinch zooms toward the cursor, a tap picks a bot ----
@@ -330,11 +330,11 @@ const up = (e) => {
     }
     let best = null, bd = 30;
     for (const a of asks.values()) for (const b of a.envoys.values()) if (b.convId) { const d = Math.hypot(b.sx - px, b.sy - 20 - py); if (d < bd) { bd = d; best = b; hit = b.convId; } }
-    if (hit) parent.postMessage({ type: "envoy:tapEdge", convId: hit }, "*");
+    if (hit) parent.postMessage({ type: "grokmate:tapEdge", convId: hit }, "*");
     else {
       for (const b of nodes.values()) { const d = Math.hypot(b.sx - px, b.sy - 20 - py); if (d < bd) { bd = d; best = b; } }
       selected = best ? best.id : null;
-      parent.postMessage({ type: "envoy:tapNode", id: selected }, "*");
+      parent.postMessage({ type: "grokmate:tapNode", id: selected }, "*");
     }
   }
   downAt = null;
@@ -350,6 +350,6 @@ document.body.appendChild(note);
 resize();
 document.title = "ready";
 requestAnimationFrame(loop);
-parent.postMessage({ type: "envoy:ready" }, "*");
+parent.postMessage({ type: "grokmate:ready" }, "*");
 </script>
 </body></html>

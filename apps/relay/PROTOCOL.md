@@ -1,4 +1,4 @@
-# Envoy relay: protocol, events and data model
+# Grokmate relay: protocol, events and data model
 
 The relay is the only place that knows who is who. The map and the app are pure consumers of its event
 stream, and every stream is redacted for the viewer before it leaves the relay.
