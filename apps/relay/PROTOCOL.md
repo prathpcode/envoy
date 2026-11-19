@@ -116,3 +116,22 @@ The relay drives every Bot through one interface, `BotDriver.turn(context) → {
 
 Round shape: 5 conversations run in parallel, 8 turns each (asker and offerer alternate), then both
 verdicts. Scripted turns are paced about 900 ms apart so the map reads as live.
+
+## Bot-facing API
+
+A student's own team of Grok Bots (`bots/` at the repo root) drives a round through these instead of
+`POST /asks`. The relay still stands in for every other student and still redacts every stream. All take
+`?as=<userId>`; if `BOT_KEY` is set they also need `Authorization: Bearer <BOT_KEY>`.
+
+| Method and path | Body | Returns |
+| --- | --- | --- |
+| `GET /bot/cards?kind=` | | `{ cards: [{ ref, offers, openTo }] }`: scoutable cards under opaque refs, no names |
+| `POST /bot/asks` | `{ text, kind?, seats?, candidates?: ref[] }` | `{ askId, kind, seats, conversations: [{ convId, alias, offers }] }`. Picks not open to the kind are dropped; no picks means the relay scouts |
+| `POST /bot/convs/:id/say` | `{ text }` | `{ reply: { text } \| { withheld }, turnsLeft }`: the other side's answer |
+| `POST /bot/convs/:id/verdict` | `{ fit, reason }` | `{ fit, willing, willingReason }`. Willingness is always the other side's own |
+| `POST /bot/asks/:id/finalize` | | Ask status after the relay applies the finalization rules and proposes the top match |
+| `GET /bot/asks/:id` | | `{ status, matches: [{ matchId, alias, status, awaiting, brief, person? }], meetings }`; `person` only after reveal |
+| `GET /bot/inbox` | | `{ approvals, meetingsToApprove, meetingsToConfirm }`: every human check waiting on this person |
+| `POST /meetings/:id/approve` | `{ slot? }` | A new `slot` moves the meeting and restarts both approvals |
+
+`POST /join` accepts `kind: "real"` for a student with their own Bots; nothing is auto-approved for them.

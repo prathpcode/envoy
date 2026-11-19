@@ -61,6 +61,22 @@ export const scripted = {
   },
 };
 
+// What a question is about, so a scripted Bot can answer a real Bot's free-form line.
+const ABOUT = [
+  ["grades", /grade|gpa|score|how (did|do) they do|how well/i], ["internships", /intern|work experience|worked at|job/i],
+  ["startup", /startup|company of their own|working on (something|anything) of their own|found(ing|er)/i],
+  ["availability", /free|available|availability|when |what time|schedule|this week|weekend|tonight|tomorrow/i],
+  ["classes", /class|course|taken|took|enrolled/i], ["projects", /built|build|project|made|shipped|experience|done/i],
+];
+/** A scripted owner's Bot answering whatever it was just asked, under the same disclosure rules. */
+export function answerFor(ctx) {
+  const topic = ABOUT.find(([, re]) => re.test(ctx.question ?? ""))?.[0];
+  if (!topic) return { text: `My person can help with ${ctx.me.card.offers.slice(0, 2).join(" and ")}.` };
+  const fact = pickFact(ctx.me.facts, topic, ctx.ask.text);
+  if (!fact) return { text: "Nothing I can add on that one." };
+  return shares(ctx.me.rules, topic) ? { text: fact.text, fact } : { withheld: topic };
+}
+
 // ---- Real Grok Bots (untested: needs a Bot with a webhook-triggered routine and a public relay URL) ----
 // bots.json: { "<userId>": { "url": "<routine webhook URL>", "key": "<routine key>" } }
 // The relay POSTs the turn context to the routine; the Bot answers by calling POST /bot/:userId/turn.

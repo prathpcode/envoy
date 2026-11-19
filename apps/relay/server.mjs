@@ -1,7 +1,7 @@
 // Grokmate relay: network state, the bus between Bots, and the redacted event stream. See PROTOCOL.md.
 import http from "node:http";
 import { inferAsk, scout, finalize, promote, karmaFor } from "./rules.mjs";
-import { scripted, webhookDriver, xaiDriver, botHooks, resolveBotTurn, enforce, scoreFit } from "./bots.mjs";
+import { scripted, webhookDriver, xaiDriver, botHooks, resolveBotTurn, enforce, scoreFit, answerFor } from "./bots.mjs";
 import { YOU, PERSONAS, SPOTS } from "./seed.mjs";
 import { interview, sanitize, whoIs, lookFromSelfie, suggestProfile, TOPICS } from "./onboard.mjs";
 import * as google from "./google.mjs";
@@ -198,12 +198,18 @@ export function createRelay() {
     const slot = new Date(); slot.setDate(slot.getDate() + 1); slot.setHours(16, 0, 0, 0);
     const mt = { id: id("meet"), matchId: m.id, askId: ask.id, askerId: ask.askerId, offererId: conv.offererId, slot: slot.toISOString(), approvals: {}, says: {}, status: "proposed", brief: m.brief };
     S.meetings.set(mt.id, mt);
+    announceMeeting(mt);
+  }
+  function announceMeeting(mt) {
     emit({ type: "meeting.proposed", meetingId: mt.id });
     for (const uid of [mt.askerId, mt.offererId]) if (simulated(uid)) later(AUTO, () => mt.status === "proposed" && !mt.approvals[roleIn(mt, uid)] && approveMeeting(mt, uid));
   }
   const roleIn = (mt, userId) => (userId === mt.askerId ? "asker" : userId === mt.offererId ? "offerer" : null);
-  function approveMeeting(mt, userId) {
+  function approveMeeting(mt, userId, slot) {
     const role = roleIn(mt, userId); if (!role) throw new Error("Not your meeting");
+    // a Scheduler Bot that read a real calendar can move the slot; that restarts both approvals
+    const moved = slot && !Number.isNaN(Date.parse(slot)) ? new Date(slot).toISOString() : null;
+    if (moved && moved !== mt.slot && mt.status === "proposed") { mt.slot = moved; mt.approvals = {}; announceMeeting(mt); }
     if (mt.approvals[role]) return;
     mt.approvals[role] = true; emit({ type: "meeting.approved", meetingId: mt.id, by: role });
     if (mt.approvals.asker && mt.approvals.offerer) { mt.status = "scheduled"; emit({ type: "meeting.scheduled", meetingId: mt.id }); }
@@ -224,6 +230,86 @@ export function createRelay() {
       mt.status = "asked"; emit({ type: "meeting.asked", meetingId: mt.id });
       for (const uid of [mt.askerId, mt.offererId]) if (simulated(uid)) later(AUTO, () => confirmMeeting(mt, uid, true, false));
     }
+  }
+
+  // ---- Bot-facing API: a student's own team of Grok Bots drives the round step by step ----
+  // The relay still stands in for everyone else, still hands out aliases, and still decides what anyone may see.
+  const KINDS = ["study", "teammate", "coffee", "cofounder", "advice"], refs = new Map();      // "<viewer>:<ref>" -> userId
+  const mine = (cond) => { if (!cond) throw Object.assign(new Error("That is not yours"), { code: 403 }); };
+  function refFor(viewer, userId) {
+    for (const [k, v] of refs) if (v === userId && k.startsWith(`${viewer}:`)) return k.slice(viewer.length + 1);
+    const r = id("cand"); refs.set(`${viewer}:${r}`, userId); return r;
+  }
+  /** Public cards a Manager Bot may scout: offers and openTo under an opaque ref, never a name. */
+  const botCards = (viewer, kind) => [...S.cards.values()].filter((c) => c.userId !== viewer && (!kind || c.openTo.includes(kind)))
+    .map((c) => ({ ref: refFor(viewer, c.userId), offers: c.offers, openTo: c.openTo }));
+  function botAsk(askerId, body) {
+    const text = String(body.text ?? "").trim(); if (!text) throw new Error("Say what you need");
+    const guess = inferAsk(text), kind = KINDS.includes(body.kind) ? body.kind : guess.kind;
+    const ask = { id: id("ask"), askerId, text, kind, seats: Math.max(1, Math.min(5, Number(body.seats) || guess.seats)), status: "talking",
+      spot: SPOTS[S.spot++ % SPOTS.length], queue: [], revealed: 0, aliases: 0, rank: 0, mode: "bot" };
+    S.asks.set(ask.id, ask);
+    // the Manager's picks, minus anyone whose card is not open to this kind of ask; no picks means the relay scouts
+    let picked = [...new Set((body.candidates ?? []).map((r) => refs.get(`${askerId}:${r}`)).filter((u) => u && S.cards.get(u).openTo.includes(kind)))].slice(0, 5);
+    if (!picked.length) picked = scout(ask, [...S.cards.values()], Object.fromEntries(S.accepts));
+    const convs = picked.map((u) => newConv(ask, u));
+    emit({ type: "ask.posted", askId: ask.id }); emit({ type: "scout.picked", askId: ask.id, convIds: convs.map((c) => c.id) });
+    for (const c of convs) emit({ type: "conv.started", askId: ask.id, convId: c.id });
+    return { askId: ask.id, kind, seats: ask.seats, conversations: convs.map((c) => ({ convId: c.id, alias: c.alias, offers: S.cards.get(c.offererId).offers })) };
+  }
+  async function botSay(userId, conv, text) {
+    const ask = S.asks.get(conv.askId); mine(conv.askerId === userId);
+    if (conv.status !== "talking" || conv.history.length >= TURNS) throw new Error("This conversation is over. Send your verdict.");
+    if (!String(text ?? "").trim()) throw new Error("Say something");
+    emit({ type: "conv.message", askId: ask.id, convId: conv.id, from: "asker", text: String(text), askText: conv.history.length === 0 });
+    conv.history.push({ from: "asker", text: String(text) });
+    await sleep(Math.min(PACE, 600));
+    const ctx = { role: "offerer", step: conv.history.length, ask, convId: conv.id, me: side(conv.offererId), other: { card: S.cards.get(userId) }, shared: conv.shared, history: conv.history, question: String(text) };
+    const driver = driverFor(conv.offererId), reply = enforce(driver === scripted ? answerFor(ctx) : await driver.turn(ctx), side(conv.offererId)) ?? { text: "…" };
+    if (reply.withheld) { conv.history.push({ from: "offerer", withheld: reply.withheld }); emit({ type: "conv.withheld", askId: ask.id, convId: conv.id, from: "offerer", topic: reply.withheld }); }
+    else { conv.history.push({ from: "offerer", text: reply.text }); conv.shared.push(reply.fact ?? { topic: "said", text: reply.text }); emit({ type: "conv.message", askId: ask.id, convId: conv.id, from: "offerer", text: reply.text }); }
+    return { reply: reply.withheld ? { withheld: reply.withheld } : { text: reply.text }, turnsLeft: Math.floor((TURNS - conv.history.length) / 2) };
+  }
+  function botVerdict(userId, conv, body) {
+    const ask = S.asks.get(conv.askId); mine(conv.askerId === userId);
+    if (!conv.verdict) {
+      const fit = Math.max(0, Math.min(10, Math.round(Number(body.fit) || 0))), fitReason = String(body.reason ?? "").trim().slice(0, 140) || "No reason given";
+      // the other side's willingness is theirs to give, so it never comes from the asker's Bot
+      const o = scripted.turn({ role: "offerer", step: "verdict", ask, me: side(conv.offererId), other: { card: S.cards.get(userId) }, shared: conv.shared }).verdict;
+      conv.status = "done"; conv.verdict = { convId: conv.id, fit, fitReason, ...o };
+      emit({ type: "conv.verdict", askId: ask.id, convId: conv.id, fit, fitReason, ...o });
+    }
+    return { fit: conv.verdict.fit, willing: conv.verdict.willing, willingReason: conv.verdict.willingReason };
+  }
+  function botFinalize(userId, ask) {
+    mine(ask.askerId === userId);
+    if (ask.status === "talking") {
+      const convs = [...S.convs.values()].filter((c) => c.askId === ask.id), waiting = convs.filter((c) => !c.verdict).map((c) => c.alias);
+      if (waiting.length) throw new Error(`Still need a verdict for ${waiting.join(", ")}`);
+      ask.queue = finalize(convs.map((c) => c.verdict), ask.seats).ranked; ask.status = "matching"; proposeNext(ask);
+    }
+    return askStatus(userId, ask);
+  }
+  function askStatus(viewer, ask) {
+    const party = (conv) => viewer === ask.askerId || viewer === conv.offererId;
+    return {
+      askId: ask.id, status: ask.status,
+      matches: [...S.matches.values()].filter((m) => m.askId === ask.id).map((m) => { const c = S.convs.get(m.convId); return { matchId: m.id, alias: c.alias, status: m.status, awaiting: m.status === "proposed" ? m.stage : null, brief: m.brief,
+        ...(m.status === "revealed" && party(c) ? { person: S.users.get(viewer === ask.askerId ? c.offererId : ask.askerId).name } : {}) }; }),
+      meetings: [...S.meetings.values()].filter((mt) => mt.askId === ask.id && roleIn(mt, viewer)).map((mt) => ({ meetingId: mt.id, slot: mt.slot, status: mt.status, approved: mt.approvals })),
+    };
+  }
+  /** Everything waiting on this person: the human checks their Bots should bring to them. */
+  function inbox(userId) {
+    const out = { approvals: [], meetingsToApprove: [], meetingsToConfirm: [] };
+    for (const m of S.matches.values()) if (m.status === "proposed") {
+      const ask = S.asks.get(m.askId), conv = S.convs.get(m.convId), role = m.stage === "asker" && ask.askerId === userId ? "asker" : m.stage === "offerer" && conv.offererId === userId ? "offerer" : null;
+      if (role) out.approvals.push({ matchId: m.id, role, alias: conv.alias, brief: m.brief, ask: { kind: ask.kind, text: ask.text } });
+    }
+    for (const mt of S.meetings.values()) { const role = roleIn(mt, userId); if (!role) continue;
+      if (mt.status === "proposed" && !mt.approvals[role]) out.meetingsToApprove.push({ meetingId: mt.id, slot: mt.slot });
+      if (mt.status === "asked" && !(role in mt.says)) out.meetingsToConfirm.push({ meetingId: mt.id, slot: mt.slot }); }
+    return out;
   }
 
   // a look is palette indices, exact colours from a selfie, facial hair and glasses; anything else is dropped
@@ -325,7 +411,7 @@ export function createRelay() {
         if (!roleIn(mt, as)) throw Object.assign(new Error("Not your meeting"), { code: 403 });
         res.writeHead(200, { ...CORS, "content-type": "text/calendar", "content-disposition": 'attachment; filename="grokmate.ics"' }); return res.end(ics(mt));
       }
-      if (M === "POST" && parts[2] === "approve") approveMeeting(mt, member());
+      if (M === "POST" && parts[2] === "approve") approveMeeting(mt, member(), body.slot);
       if (M === "POST" && parts[2] === "confirm") confirmMeeting(mt, member(), body.happened, body.helpful);
       return json(res, 200, { ok: true });
     }
@@ -333,6 +419,23 @@ export function createRelay() {
     if (M === "POST" && parts[0] === "demo" && parts[1] === "reset") {
       reset(); for (const c of clients) c.res.end(); clients.clear();       // clients reconnect and replay the fresh log
       return json(res, 200, { ok: true });
+    }
+    if (parts[0] === "bot" && parts[2] !== "turn") {
+      if (process.env.BOT_KEY && req.headers.authorization !== `Bearer ${process.env.BOT_KEY}`) throw Object.assign(new Error("Bad bot key"), { code: 401 });
+      const me = member();
+      if (M === "GET" && parts[1] === "cards") return json(res, 200, { cards: botCards(me, url.searchParams.get("kind")) });
+      if (M === "GET" && parts[1] === "inbox") return json(res, 200, inbox(me));
+      if (M === "POST" && parts[1] === "asks" && !parts[2]) return json(res, 200, botAsk(me, body));
+      if (parts[1] === "asks" && parts[2]) {
+        const ask = need(S.asks, parts[2], "ask");
+        if (M === "POST" && parts[3] === "finalize") return json(res, 200, botFinalize(me, ask));
+        if (M === "GET") { mine(ask.askerId === me || [...S.convs.values()].some((c) => c.askId === ask.id && c.offererId === me)); return json(res, 200, askStatus(me, ask)); }
+      }
+      if (M === "POST" && parts[1] === "convs" && parts[2]) {
+        const conv = need(S.convs, parts[2], "conversation");
+        if (parts[3] === "say") return json(res, 200, await botSay(me, conv, body.text));
+        if (parts[3] === "verdict") return json(res, 200, botVerdict(me, conv, body));
+      }
     }
     if (M === "POST" && parts[0] === "bot" && parts[2] === "turn") {
       if (!process.env.BOT_KEY || req.headers.authorization !== `Bearer ${process.env.BOT_KEY}`) throw Object.assign(new Error("Bad bot key"), { code: 401 });

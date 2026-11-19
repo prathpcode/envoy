@@ -105,3 +105,42 @@ test("a timeout moves the next match up, and nothing clearing the bar leaves the
     await me.until((e) => e.type === "ask.open");
   } finally { me.stop(); await R.close(); }
 });
+
+test("a student's own Bots can drive a round through the Bot-facing API", async () => {
+  const R = await boot(), me = R.watch("u_you"), spec = R.watch("spectator");
+  try {
+    const { cards } = (await R.call("/bot/cards?kind=study", "u_you")).body;
+    assert.ok(cards.length >= 5); assert.ok(!JSON.stringify(cards).match(/u_|Dev|Eli|Noor/), "scouting never shows who a card belongs to");
+    const pick = cards.filter((c) => /linear algebra/i.test(c.offers.join(" "))).map((c) => c.ref);
+    const ask = (await R.call("/bot/asks", "u_you", "POST", { text: "I need a study partner for Thursday's linear algebra exam", candidates: pick })).body;
+    assert.equal(ask.conversations.length, pick.length);
+
+    for (const c of ask.conversations) {
+      await R.call(`/bot/convs/${c.convId}/say`, "u_you", "POST", { text: "My person needs help before a linear algebra exam." });
+      const g = (await R.call(`/bot/convs/${c.convId}/say`, "u_you", "POST", { text: "How did they do in those classes?" })).body;
+      assert.equal(g.reply.withheld, "grades");                                   // every linear algebra persona hides grades
+      const a = (await R.call(`/bot/convs/${c.convId}/say`, "u_you", "POST", { text: "When are they free this week?" })).body;
+      assert.ok(a.reply.text);
+      assert.equal((await R.call(`/bot/convs/${c.convId}/say`, "u_maya", "POST", { text: "hi" })).status, 403);
+      const v = (await R.call(`/bot/convs/${c.convId}/verdict`, "u_you", "POST", { fit: c === ask.conversations[0] ? 9 : 5, reason: "Knows the material and is free before Thursday" })).body;
+      assert.equal(v.willing, true);
+    }
+    const done = (await R.call(`/bot/asks/${ask.askId}/finalize`, "u_you", "POST")).body;
+    assert.equal(done.matches.length, 1); assert.equal(done.matches[0].awaiting, "asker"); assert.equal(done.matches[0].person, undefined);
+    assert.equal((await R.call("/bot/inbox", "u_you")).body.approvals[0].matchId, done.matches[0].matchId);
+
+    await R.call(`/matches/${done.matches[0].matchId}/approve`, "u_you", "POST");
+    await me.until((e) => e.type === "match.revealed");
+    const after = (await R.call(`/bot/asks/${ask.askId}`, "u_you")).body;
+    assert.ok(after.matches[0].person); assert.equal(after.meetings.length, 1);
+
+    const slot = new Date(Date.now() + 3 * 864e5).toISOString();                  // the Scheduler found a different time
+    await R.call(`/meetings/${after.meetings[0].meetingId}/approve`, "u_you", "POST", { slot });
+    const set = await me.until((e) => e.type === "meeting.scheduled"); assert.equal(set.slot, slot);
+
+    await spec.until((e) => e.type === "match.revealed");
+    const outside = JSON.stringify(spec.events.filter((e) => e.type !== "node.joined"));
+    assert.ok(!outside.includes("My person needs help before"), "the opening line's wording stays with the people in the ask");
+    assert.ok(!outside.includes(after.matches[0].person));
+  } finally { me.stop(); spec.stop(); await R.close(); }
+});
