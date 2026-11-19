@@ -47,19 +47,19 @@ export function AskPanel({ as, state, online, onOpenConv, onFocusAsk }: {
   if (spectator) {
     const live = [...asks].reverse().find((a) => a.status === "talking" || a.status === "matching") ?? asks[asks.length - 1];
     return (
-      <Card className="flex flex-col gap-4 min-h-0 overflow-y-auto px-6 pb-6 pt-9">
+      <ScrollCard className="flex flex-col gap-4 px-6 pb-6 pt-9">
         <h1 className="text-3xl font-extrabold leading-tight text-ink">The campus, from the outside</h1>
         <p className="text-base font-medium text-ink-soft">You see bots talk. You never see who they speak for.</p>
         {live ? <Round ask={live} convs={convsOf(live)} title={`${KIND_LABEL[live.kind] ?? "An"} ask`} onOpenConv={onOpenConv} onFocus={() => onFocusAsk(live.askId)} />
           : <p className="text-base font-bold text-ink">No asks yet.</p>}
-      </Card>
+      </ScrollCard>
     );
   }
 
   const active = !composing ? mine ?? incoming : undefined;
   if (!active) {
     return (
-      <Card className="flex flex-col gap-5 min-h-0 overflow-y-auto px-6 pb-7 pt-10">
+      <ScrollCard className="flex flex-col gap-5 px-6 pb-7 pt-10">
         <h1 className="text-4xl font-extrabold leading-[1.02] tracking-tight text-ink">Your bot asks the campus so you don&apos;t have to.</h1>
         <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); send(text); }}>
           <Textarea label="What do you need?" rows={2} autoGrow placeholder="A study partner for Thursday's exam" value={text} onChange={(e) => setText(e.target.value)} />
@@ -73,7 +73,7 @@ export function AskPanel({ as, state, online, onOpenConv, onFocusAsk }: {
             {mine && <Button type="button" variant="ghost" onClick={() => setComposing(false)}>Back</Button>}
           </div>
         </form>
-      </Card>
+      </ScrollCard>
     );
   }
 
@@ -86,7 +86,7 @@ export function AskPanel({ as, state, online, onOpenConv, onFocusAsk }: {
   const step = revealed.length ? (meetings.some((m) => m.status !== "proposed") ? 4 : 3) : active.status === "matching" || active.status === "open" ? 2 : active.status === "talking" ? 1 : 0;
 
   return (
-    <Card className="flex flex-col gap-5 min-h-0 overflow-y-auto px-6 pb-6 pt-10">
+    <ScrollCard className="flex flex-col gap-5 px-6 pb-6 pt-10">
       <div className="flex flex-col gap-2">
         <Badge tone="sky" tilt={-2} className="self-start">{asker ? "Your ask" : "A bot is asking yours"} · {KIND_LABEL[active.kind] ?? active.kind}</Badge>
         {active.text && <p className="text-xl font-extrabold leading-snug text-ink">{active.text}</p>}
@@ -120,7 +120,7 @@ export function AskPanel({ as, state, online, onOpenConv, onFocusAsk }: {
       {asker && (active.status === "filled" || active.status === "open") && (
         <Button variant="secondary" className="self-start" onClick={() => setComposing(true)}>Ask something else</Button>
       )}
-    </Card>
+    </ScrollCard>
   );
 }
 
@@ -161,6 +161,16 @@ function Round({ ask, convs, title, onOpenConv, onFocus }: { ask: Ask; convs: Co
         })}
       </ul>
     </div>
+  );
+}
+
+/** A card whose content scrolls inside it. The sticker face is drawn on the card's own box,
+ *  so the card itself must not scroll or content scrolled past the fold lands on the map. */
+function ScrollCard({ className, children }: { className: string; children: React.ReactNode }) {
+  return (
+    <Card className="min-h-0 gap-0 overflow-hidden p-0">
+      <div className={`min-h-0 overflow-y-auto ${className}`}>{children}</div>
+    </Card>
   );
 }
 
