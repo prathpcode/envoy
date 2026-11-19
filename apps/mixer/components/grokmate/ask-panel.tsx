@@ -206,6 +206,7 @@ function Proposal({ as, match, asker, mineToAnswer }: { as: string; match: Match
 
 function MeetingRow({ as, meeting, role }: { as: string; meeting: Meeting; role: "asker" | "offerer" }) {
   const [helpful, setHelpful] = React.useState(true);
+  const [selfie, setSelfie] = React.useState(false);
   const confirm = (happened: boolean) => call(api(`/meetings/${meeting.meetingId}/confirm`, as, "POST", { happened, helpful: role === "asker" ? happened && helpful : undefined }));
   return (
     <div className="flex flex-col gap-3 border-t-4 border-dotted border-ink/20 pt-4">
@@ -230,13 +231,75 @@ function MeetingRow({ as, meeting, role }: { as: string; meeting: Meeting; role:
               <input type="checkbox" className="size-5 accent-[#141414]" checked={helpful} onChange={(e) => setHelpful(e.target.checked)} /> It helped
             </label>
           )}
-          <div className="flex gap-4">
-            <Button variant="success" onClick={() => confirm(true)}>We met</Button>
-            <Button variant="ghost" className="text-ink" onClick={() => confirm(false)}>It didn&apos;t happen</Button>
-          </div>
+          {selfie ? <SelfieCheck onDone={() => confirm(true)} onCancel={() => setSelfie(false)} /> : (
+            <div className="flex gap-4">
+              <Button variant="success" onClick={() => setSelfie(true)}>We met</Button>
+              <Button variant="ghost" className="text-ink" onClick={() => confirm(false)}>It didn&apos;t happen</Button>
+            </div>
+          )}
         </div>
       )}
       {meeting.status === "confirmed" && <p className="text-base font-bold text-ink-soft">{meeting.happened ? "Logged. Karma lands once you've both confirmed." : "Logged as not happened."}</p>}
+    </div>
+  );
+}
+
+/** Proof of meeting: a selfie with the person you met. Demo only: the photo never leaves the
+ *  browser and nothing inspects it. Taking it is the check (good faith). */
+function SelfieCheck({ onDone, onCancel }: { onDone: () => void; onCancel: () => void }) {
+  const video = React.useRef<HTMLVideoElement>(null);
+  const stream = React.useRef<MediaStream | null>(null);
+  const [shot, setShot] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const stop = () => { stream.current?.getTracks().forEach((t) => t.stop()); stream.current = null; };
+  const start = React.useCallback(async () => {
+    setError(null);
+    if (!navigator.mediaDevices?.getUserMedia) { setError("This browser can't open the camera here."); return; }
+    try {
+      stream.current = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+      if (video.current) { video.current.srcObject = stream.current; await video.current.play().catch(() => {}); }
+    } catch { setError("Camera access was blocked. Allow it in your browser to verify."); }
+  }, []);
+
+  React.useEffect(() => { start(); return stop; }, [start]);
+
+  const snap = () => {
+    const v = video.current;
+    if (!v || !v.videoWidth) return;
+    const c = document.createElement("canvas");
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    const ctx = c.getContext("2d")!;
+    ctx.translate(c.width, 0); ctx.scale(-1, 1); // match the mirrored preview
+    ctx.drawImage(v, 0, 0);
+    setShot(c.toDataURL("image/jpeg", 0.8));
+    stop();
+  };
+  const retake = () => { setShot(null); start(); };
+  const cancel = () => { stop(); onCancel(); };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <span className="text-base font-extrabold text-ink">Snap a selfie together to collect your karma.</span>
+      <div className="sticker sticker-flat relative aspect-[4/3] w-full overflow-hidden bg-ink">
+        {shot
+          ? <img src={shot} alt="Your selfie" className="size-full object-cover" />
+          : <video ref={video} playsInline muted className="size-full -scale-x-100 object-cover" />}
+        {error && <p className="absolute inset-0 flex items-center justify-center p-4 text-center text-base font-bold text-paper">{error}</p>}
+      </div>
+      <div className="flex flex-wrap gap-4">
+        {shot ? (
+          <>
+            <Button variant="success" tilt={-2} onClick={onDone}>Verify meeting</Button>
+            <Button variant="ghost" className="text-ink" onClick={retake}>Retake</Button>
+          </>
+        ) : error ? (
+          <Button tilt={-2} onClick={start}>Try again</Button>
+        ) : (
+          <Button tilt={-2} onClick={snap}>Take selfie</Button>
+        )}
+        <Button variant="ghost" className="text-ink" onClick={cancel}>Cancel</Button>
+      </div>
     </div>
   );
 }
