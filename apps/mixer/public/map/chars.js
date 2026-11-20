@@ -27,6 +27,7 @@ const GLASS = ["#1b1418", "#1b1418", "#1b1418"];
 const STYLES = ["short", "spiky", "long", "bun", "buzz", "curly", "ponytail", "cap"];
 
 export const CW = 12, CH = 20;
+export const PALETTES = { SKIN, HAIR, TOP, STYLES };
 
 function fnv(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0; }
 function mb32(seed) { let a = seed; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -40,6 +41,36 @@ export function traits(name) {
     top, bottom: pick(r, BOTTOM), shoe: pick(r, SHOE), glasses: r() < 0.28, longSleeve: r() < 0.5,
     cap: pick(r, TOP.filter((t) => t !== top)),
   };
+}
+
+// a 3-step ramp from one exact colour (a selfie's skin, hair or shirt): base, shade, outline
+const HEX = /^#[0-9a-f]{6}$/i;
+function ramp(hex) {
+  const n = parseInt(hex.slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255];
+  const mul = (k) => "#" + c.map((v) => Math.round(v * k).toString(16).padStart(2, "0")).join("");
+  return [hex.toLowerCase(), mul(0.82), mul(0.45)];
+}
+export const BEARDS = ["none", "stubble", "mustache", "goatee", "beard"];
+
+/**
+ * A chosen look: { skin, hair, style, top, glasses } as indices into PALETTES (glasses a boolean), optionally with
+ * exact colours { skinHex, hairHex, topHex } (which win over the indices) and facial hair { beard: one of BEARDS }.
+ * Anything left out comes from the name, so a partial look is fine.
+ */
+export function lookTraits(name, look) {
+  const t = traits(name);
+  if (!look) return t;
+  const at = (arr, i) => (Number.isInteger(i) && arr[i] ? arr[i] : null);
+  const hex = (h) => (typeof h === "string" && HEX.test(h) ? ramp(h) : null);
+  const top = hex(look.topHex) ?? at(TOP, look.top) ?? t.top;
+  return { ...t, skin: hex(look.skinHex) ?? at(SKIN, look.skin) ?? t.skin, hair: hex(look.hairHex) ?? at(HAIR, look.hair) ?? t.hair,
+    style: at(STYLES, look.style) ?? t.style, beard: BEARDS.includes(look.beard) ? look.beard : "none",
+    top, glasses: typeof look.glasses === "boolean" ? look.glasses : t.glasses, cap: t.cap === top ? TOP[(TOP.indexOf(top) + 1) % TOP.length] : t.cap };
+}
+/** The look a name gives by default, as indices, so an editor can start from it. */
+export function lookOf(name) {
+  const t = traits(name);
+  return { skin: SKIN.indexOf(t.skin), hair: HAIR.indexOf(t.hair), style: STYLES.indexOf(t.style), top: TOP.indexOf(t.top), glasses: t.glasses };
 }
 
 // A masked grokmate: the same blank figure for everyone, so nothing about it points back to a person.
@@ -87,6 +118,10 @@ function paint(t, view, frame, talk, blink) {
     set(7, 5 + b, blink ? t.skin : EYE, blink ? 1 : 2);
     if (talk && frame === -2) set(8, 7 + b, MOUTH, 2); else set(8, 7 + b, t.skin, 1);
     if (t.glasses) { set(6, 5 + b, GLASS, 2); set(8, 5 + b, GLASS, 2); set(7, 4 + b, GLASS, 2); }
+    const FH = t.beard;
+    if (FH === "mustache" || FH === "goatee" || FH === "beard") set(8, 6 + b, t.hair, 1);
+    if (FH === "goatee") { set(7, 8 + b, t.hair, 1); set(8, 8 + b, t.hair, 1); }
+    if (FH === "beard" || FH === "stubble") { rect(4, 7 + b, 7, 8 + b, t.hair, FH === "stubble" ? 1 : 0); set(9, 6 + b, t.skin); }
     // hair
     const H_ = t.hair;
     if (t.style === "cap") { rect(3, 1 + b, 8, 3 + b, t.cap); rect(8, 3 + b, 10, 3 + b, t.cap, 1); rect(2, 4 + b, 3, 6 + b, H_); }
@@ -124,6 +159,12 @@ function paint(t, view, frame, talk, blink) {
     set(4, 5 + b, blink ? t.skin : EYE, blink ? 1 : 2); set(7, 5 + b, blink ? t.skin : EYE, blink ? 1 : 2);
     if (talk && frame === -2) { set(5, 7 + b, MOUTH, 2); set(6, 7 + b, MOUTH, 2); } else { set(5, 7 + b, t.skin, 1); set(6, 7 + b, t.skin, 1); }
     if (t.glasses) { rect(3, 4 + b, 8, 4 + b, GLASS, 2); set(3, 5 + b, GLASS, 2); set(8, 5 + b, GLASS, 2); set(5, 5 + b, GLASS, 2); set(6, 5 + b, GLASS, 2); }
+    // facial hair: the mouth (5-6, row 7) stays clear so a talking frame still reads
+    const FH = t.beard, H = t.hair;
+    if (FH === "stubble") { set(2, 7 + b, H, 1); set(9, 7 + b, H, 1); rect(3, 8 + b, 8, 8 + b, H, 1); set(4, 7 + b, H, 1); set(7, 7 + b, H, 1); }
+    if (FH === "mustache" || FH === "goatee" || FH === "beard") rect(4, 6 + b, 7, 6 + b, H);
+    if (FH === "goatee") rect(4, 8 + b, 7, 8 + b, H);
+    if (FH === "beard") { rect(2, 6 + b, 2, 7 + b, H); rect(9, 6 + b, 9, 7 + b, H); set(3, 7 + b, H); set(4, 7 + b, H); set(7, 7 + b, H); set(8, 7 + b, H); rect(3, 8 + b, 8, 8 + b, H); }
   }
   const H_ = t.hair;
   if (t.style === "cap") {

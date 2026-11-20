@@ -3,7 +3,11 @@ import http from "node:http";
 import { inferAsk, scout, finalize, promote, karmaFor } from "./rules.mjs";
 import { scripted, webhookDriver, xaiDriver, botHooks, resolveBotTurn, enforce, scoreFit } from "./bots.mjs";
 import { YOU, PERSONAS, SPOTS } from "./seed.mjs";
+import { interview, sanitize, whoIs, lookFromSelfie, suggestProfile, TOPICS } from "./onboard.mjs";
+import * as google from "./google.mjs";
 
+// local settings (BOT_KEY, PUBLIC_URL, ...) live in apps/relay/.env.local, which is not committed
+if (!process.env.NODE_TEST_CONTEXT) try { process.loadEnvFile(new URL("./.env.local", import.meta.url)); } catch { /* no file: defaults */ }
 const env = (k, d) => Number(process.env[k] ?? d);
 const PACE = env("PACE_MS", 900), APPROVAL_TIMEOUT = env("APPROVAL_TIMEOUT_MS", 60000), TURN_TIMEOUT = env("TURN_TIMEOUT_MS", 20000);
 const AUTO = Math.min(2500, PACE * 3), TURNS = 8;
@@ -28,7 +32,7 @@ export function createRelay() {
   }
   function addUser(user, card, rules, facts) {
     S.users.set(user.id, { ...user, joinedAt: Date.now() }); S.cards.set(user.id, card); S.rules.set(user.id, rules); S.facts.set(user.id, facts);
-    emit({ type: "node.joined", user: { id: user.id, name: user.name, place: user.place, kind: user.kind } });
+    emit({ type: "node.joined", user: { id: user.id, name: user.name, place: user.place, kind: user.kind, ...(user.look ? { look: user.look } : {}) } });
   }
   const total = (userId) => S.karma.filter((k) => k.userId === userId).reduce((a, k) => a + k.delta, 0);
   const connected = (userId) => [...clients].some((c) => c.viewer === userId);
@@ -222,12 +226,26 @@ export function createRelay() {
     }
   }
 
+  // a look is palette indices, exact colours from a selfie, facial hair and glasses; anything else is dropped
+  function cleanLook(l) {
+    const out = {};
+    for (const k of ["skin", "hair", "style", "top"]) if (k in l) out[k] = Math.max(0, Math.floor(Number(l[k]) || 0));
+    for (const k of ["skinHex", "hairHex", "topHex"]) if (typeof l[k] === "string" && /^#[0-9a-f]{6}$/i.test(l[k])) out[k] = l[k].toLowerCase();
+    if (["none", "stubble", "mustache", "goatee", "beard"].includes(l.beard)) out.beard = l.beard;
+    if ("glasses" in l) out.glasses = !!l.glasses;
+    return out;
+  }
   function join(body) {
     const uid = id("u"), name = String(body.name ?? "").trim(); if (!name) throw new Error("A name is required");
-    const openTo = Array.isArray(body.openTo) ? body.openTo : [], offers = Array.isArray(body.offers) ? body.offers.map(String) : [];
-    addUser({ id: uid, name, place: String(body.place ?? "tresidder"), kind: "persona" }, { userId: uid, offers, openTo, affiliation: body.affiliation ?? "" },
-      ["classes", "grades", "internships", "projects", "availability", "startup", "contact"].map((topic) => ({ topic, share: !["grades", "contact"].includes(topic) })),
-      [{ topic: "availability", text: "Free most afternoons this week." }]);
+    // a real person from onboarding brings their own facts, rules and look; the demo desk's newcomers get defaults
+    const real = body.kind === "real", p = real ? sanitize(body) : null;
+    const openTo = real ? p.openTo : Array.isArray(body.openTo) ? body.openTo : [], offers = real ? p.offers : Array.isArray(body.offers) ? body.offers.map(String) : [];
+    const hide = real ? p.hide : ["grades", "contact"];
+    const look = body.look && typeof body.look === "object" ? cleanLook(body.look) : undefined;
+    addUser({ id: uid, name, place: String(body.place ?? "tresidder"), kind: real ? "real" : "persona", ...(look ? { look } : {}), ...(body.linkedin ? { linkedin: String(body.linkedin) } : {}) },
+      { userId: uid, offers, openTo, affiliation: String(body.affiliation ?? "") },
+      TOPICS.map((topic) => ({ topic, share: !hide.includes(topic) })),
+      real ? p.facts : [{ topic: "availability", text: "Free most afternoons this week." }]);
     S.accepts.set(uid, 0);
     if (body.invitedBy && S.users.has(body.invitedBy)) award(karmaFor({ type: "invite_briefed", inviter: body.invitedBy }));
     // an open ask is re-scored against the newcomer
@@ -261,7 +279,7 @@ export function createRelay() {
       return;
     }
     if (M === "GET" && parts[0] === "state") {
-      const users = [...S.users.values()].map(({ id, name, place, kind }) => ({ id, name, place, kind }));
+      const users = [...S.users.values()].map(({ id, name, place, kind, look }) => ({ id, name, place, kind, ...(look ? { look } : {}) }));
       const leaderboard = users.map((u) => ({ userId: u.id, name: u.name, points: total(u.id) })).sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
       return json(res, 200, { me: users.find((u) => u.id === as) ?? null, users, leaderboard, clock: Date.now() });
     }
@@ -275,6 +293,17 @@ export function createRelay() {
       return json(res, 200, { card, ...(own ? { disclosure: { rules: S.rules.get(as) } } : {}) });
     }
     if (M === "POST" && parts[0] === "join") return json(res, 200, join(body));
+    if (M === "GET" && parts[0] === "oauth" && parts[1] === "google") {
+      if (!google.googleReady()) return json(res, 501, { error: "Google Calendar isn't set up (no GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET)" });
+      if (parts[2] === "start") { res.writeHead(302, { ...CORS, location: google.startUrl(req) }); return res.end(); }
+      if (parts[2] === "callback") { res.writeHead(200, { ...CORS, "content-type": "text/html; charset=utf-8" }); return res.end(await google.callback(req, url)); }
+    }
+    if (M === "GET" && parts[0] === "onboard" && parts[1] === "connections") return json(res, 200, { google: google.googleReady() });
+    if (M === "GET" && parts[0] === "onboard" && parts[1] === "gcal") return json(res, 200, google.take(parts[2]));
+    if (M === "POST" && parts[0] === "onboard" && parts[1] === "suggest") return json(res, 200, await suggestProfile(body));
+    if (M === "POST" && parts[0] === "onboard" && parts[1] === "look") return json(res, 200, await lookFromSelfie(body.photo));
+    if (M === "GET" && parts[0] === "onboard" && parts[1] === "who") return json(res, 200, await whoIs(url.searchParams.get("url")));
+    if (M === "POST" && parts[0] === "onboard" && parts[1] === "chat") return json(res, 200, await interview(body));
     if (M === "POST" && parts[0] === "asks") {
       const text = String(body.text ?? "").trim(); if (!text) throw new Error("Say what you need");
       return json(res, 200, { askId: postAsk(member(), text).id });

@@ -15,7 +15,7 @@ canvas{display:block;width:100vw;height:100vh;cursor:grab;touch-action:none}
 // Painted isometric campus: a pre-rendered tile pyramid (z6..z10, 512 px tiles, about 5 px per metre at z10) drawn on a
 // 2D canvas, with people standing on a walkable-ground mask derived from the painting itself.
 // World units are z10 pixels, origin at the top-left of the downloaded area. The camera faces east, so north is left.
-import { traits, drawChar, FOOT } from "./chars.js";
+import { traits, lookTraits, drawChar, FOOT } from "./chars.js";
 
 const P = new URLSearchParams(location.search);
 const EMBED = P.get("embed") === "1";
@@ -133,7 +133,7 @@ const rnd = rng(20261119);
 const nodes = new Map();      // userId -> person standing at home
 const asks = new Map();       // askId -> { spot:[x,y], envoys: Map(alias -> token) }
 const edges = new Map();      // convId -> { askId, alias, state, pulses: [] }
-let selected = null, meName = null;
+let selected = null, meName = null, meLook = null;
 
 function nearCapped(p, cap) { const q = nearestWalkable(p[0], p[1]); return Math.hypot(q[0] - p[0], q[1] - p[1]) <= cap ? q : p; }
 function token(name, x, y, t) {
@@ -143,19 +143,19 @@ function token(name, x, y, t) {
 // an envoy wears a real character only when this viewer is allowed to know whose it is; otherwise a stand-in
 function dress(b) {
   const name = b.revealed ?? (b.you ? meName : null);
-  b.t = traits(name ?? "grokmate:" + b.standIn); b.key = "";
+  b.t = name ? lookTraits(name, b.revealedLook ?? (b.you && !b.revealed ? meLook : null)) : traits("grokmate:" + b.standIn); b.key = "";
 }
 function envoy(alias, x, y, you, convId, askId) {
   const b = Object.assign(token(alias, x, y, null), { alias, you: !!you, masked: true, convId, standIn: convId ?? askId + ":" + alias });
   dress(b); return b;
 }
 function addNode(u) {
-  if (u.me && meName !== u.name) { meName = u.name; for (const a of asks.values()) for (const b of a.envoys.values()) if (b.you) dress(b); }
+  if (u.me && (meName !== u.name || meLook !== (u.look ?? null))) { meName = u.name; meLook = u.look ?? null; for (const a of asks.values()) for (const b of a.envoys.values()) if (b.you) dress(b); }
   if (nodes.has(u.id)) { Object.assign(nodes.get(u.id), { me: !!u.me, friend: !!u.friend }); return; }
   const home = PLACES[u.place] ?? SPOTS.quad, n = [...nodes.values()].filter((q) => q.place === u.place).length;
   const base = fromLatLon(home[0], home[1]), a = n * 2.4, r = n ? 40 + n * 16 : 0;     // housemates fan out instead of stacking
   const p = nearCapped([base[0] + Math.cos(a) * r, base[1] + Math.sin(a) * r * 0.6], 600);
-  nodes.set(u.id, Object.assign(token(u.name, p[0], p[1], traits(u.name)), { id: u.id, place: u.place, me: !!u.me, friend: !!u.friend }));
+  nodes.set(u.id, Object.assign(token(u.name, p[0], p[1], lookTraits(u.name, u.look)), { id: u.id, place: u.place, me: !!u.me, friend: !!u.friend, look: u.look ?? null }));
   dirty = true;
 }
 function addAsk(m) {
@@ -294,14 +294,16 @@ addEventListener("message", (e) => {
     for (const id of [m.a, m.b]) { const n = nodes.get(id); if (n && !n.me) n.friend = true; } }
   if (m.type === "grokmate:reveal") {
     const a = asks.get(m.askId);
-    for (const [alias, name] of [["Asker", m.asker], [m.alias, m.offerer]]) { const b = a?.envoys.get(alias); if (b && name) { b.revealed = name; dress(b); } }
+    for (const [alias, name, uid] of [["Asker", m.asker, m.askerId], [m.alias, m.offerer, m.offererId]]) {
+      const b = a?.envoys.get(alias); if (b && name) { b.revealed = name; b.revealedLook = nodes.get(uid)?.look ?? null; dress(b); }
+    }
   }
   if (m.type === "grokmate:clearAsk") { asks.delete(m.askId); for (const [k, v] of edges) if (v.askId === m.askId) edges.delete(k); }
   if (m.type === "grokmate:focus") {
     const n = m.id ? nodes.get(m.id) : null, a = m.askId ? asks.get(m.askId) : null;
     if (n) { selected = n.id; flyTo(n.x, n.y, 0.8); } else if (a) flyTo(a.c[0], a.c[1], 0.75);
   }
-  if (m.type === "grokmate:reset") { nodes.clear(); asks.clear(); edges.clear(); selected = null; meName = null; }
+  if (m.type === "grokmate:reset") { nodes.clear(); asks.clear(); edges.clear(); selected = null; meName = null; meLook = null; }
 });
 
 // ---- interaction: drag pans, wheel or pinch zooms toward the cursor, a tap picks a bot ----

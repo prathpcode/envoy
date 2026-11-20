@@ -79,7 +79,7 @@ export function useGrokmate(as: string | null, frame: React.RefObject<HTMLIFrame
       if (e.type === "match.revealed" && e.asker && e.offerer) {
         post({ type: "grokmate:link", a: e.asker.id, b: e.offerer.id });
         // only the two parties get names, so only they see the envoys drop their masks
-        post({ type: "grokmate:reveal", askId: e.askId, alias: e.alias, asker: e.asker.name, offerer: e.offerer.name });
+        post({ type: "grokmate:reveal", askId: e.askId, alias: e.alias, asker: e.asker.name, offerer: e.offerer.name, askerId: e.asker.id, offererId: e.offerer.id });
       }
       if (e.type === "karma.changed") { refreshBoard(); if (fresh && e.userId === as) setLastKarma({ delta: e.delta, at: Date.now() }); }
       // once the asker's bot has heard back from every candidate, its huddle breaks up and leaves the map.

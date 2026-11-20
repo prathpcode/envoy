@@ -73,13 +73,15 @@ export function resolveBotTurn(userId, convId, reply) {
   if (!done) return false;
   pending.delete(k); done(reply); return true;
 }
+// PUBLIC_URL is where a Bot's cloud computer can reach this relay (a tunnel or a deploy), so each turn says where to answer.
+const replyUrl = (userId) => (process.env.PUBLIC_URL ? `${process.env.PUBLIC_URL.replace(/\/$/, "")}/bot/${userId}/turn` : undefined);
 export function webhookDriver(hook, userId, timeoutMs) {
   return {
     name: "webhook",
     async turn(ctx) {
       const wait = new Promise((res) => { pending.set(`${userId}:${ctx.convId}`, res); setTimeout(() => res(null), timeoutMs); });
       try {
-        await fetch(hook.url, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${hook.key}` }, body: JSON.stringify(publicContext(ctx)) });
+        await fetch(hook.url, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${hook.key}` }, body: JSON.stringify({ ...publicContext(ctx), userId, replyTo: replyUrl(userId) }) });
       } catch { /* fall through to the timeout */ }
       return (await wait) ?? scripted.turn(ctx);
     },

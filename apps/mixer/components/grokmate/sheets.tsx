@@ -49,7 +49,7 @@ export function PersonSheet({ as, userId, user, points, known, onClose }: {
 
         {user && (
           <div className="flex items-center gap-5">
-            <CharAvatar name={user.name} cell={5} walk turn />
+            <CharAvatar name={user.name} look={user.look} cell={5} walk turn />
             <div className="flex flex-col items-start gap-2">
               {points !== undefined && <Badge tone="paper" tilt={-2} className="tabular-nums">{points} karma</Badge>}
               {known && <Badge tone="lime" tilt={2}>In your world</Badge>}

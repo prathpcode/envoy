@@ -1,18 +1,21 @@
 "use client";
 import * as React from "react";
 // the same pixel people the map draws, so the roster and the campus always match
-import { traits, drawChar, FOOT } from "@/public/map/chars.js";
+import { lookTraits, drawChar, FOOT } from "@/public/map/chars.js";
+
+export type Look = { skin?: number; hair?: number; style?: number; top?: number; glasses?: boolean; skinHex?: string; hairHex?: string; topHex?: string; beard?: string };
 
 type View = "front" | "back" | "side";
 
-export function CharAvatar({ name, cell = 3, walk = false, turn = false, className = "", label }: {
-  name: string; cell?: number; walk?: boolean; turn?: boolean; className?: string; label?: string;
+export function CharAvatar({ name, look, bare = false, cell = 3, walk = false, turn = false, className = "", label }: {
+  name: string; look?: Look; /** just the character, without its paper sticker (for placing inside another sticker) */ bare?: boolean; cell?: number; walk?: boolean; turn?: boolean; className?: string; label?: string;
 }) {
   const ref = React.useRef<HTMLCanvasElement>(null);
+  const lookKey = JSON.stringify(look ?? null);
   React.useEffect(() => {
     const ctx = ref.current?.getContext("2d");
     if (!ctx) return;
-    const t = traits(name);
+    const t = lookTraits(name, look);
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const views: [View, boolean][] = [["front", false], ["side", false], ["back", false], ["side", true]];
     let raf = 0, last = "";
@@ -26,10 +29,10 @@ export function CharAvatar({ name, cell = 3, walk = false, turn = false, classNa
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [name, cell, walk, turn]);
+  }, [name, cell, walk, turn, lookKey]);
 
   return (
-    <span className={`sticker face-paper inline-flex shrink-0 items-end justify-center px-1 pt-1 ${className}`} role="img" aria-label={label ?? `${name}'s character`}>
+    <span className={`${bare ? "" : "sticker face-paper px-1 pt-1"} inline-flex shrink-0 items-end justify-center px-1 pt-1 ${className}`} role="img" aria-label={label ?? `${name}'s character`}>
       <canvas ref={ref} width={FOOT.w * cell} height={FOOT.h * cell} style={{ imageRendering: "pixelated", width: FOOT.w * cell, height: FOOT.h * cell }} />
     </span>
   );

@@ -32,18 +32,23 @@ Everyone in `seed.mjs` is fictional sample content.
 A persona's owner is simulated: approvals and confirmations are answered after a short pause. Open the app
 as that persona (`/?as=u_maya`) and the relay waits for your tap instead, so two tabs give both sides of an approval.
 
-## Connecting a real Grok Bot (untested)
+## Connecting a real Grok Bot
 
-Nothing here has been run against a real Bot. The shape, from the Grok Bot docs:
+The relay side is tested against a stand-in Bot (20 turns of an ask answered through the webhook path). It has
+not been run against a real Grok Bot yet.
 
-1. The relay must be reachable from the internet; a Bot's cloud computer cannot see `localhost`.
-2. In the Bot, create a routine with a **webhook** trigger. Put its URL and key in `bots.json`:
-   `{ "u_you": { "url": "<routine webhook URL>", "key": "<routine key>" } }`.
-3. Teach the routine: read the posted turn context (`role`, `ask`, `history`), answer in one or two sentences
-   without naming its owner, and send the answer with
-   `POST <relay>/bot/<userId>/turn` and `Authorization: Bearer $BOT_KEY`, body `{ "convId", "text" }` or
-   `{ "convId", "withheld": "<topic>" }`.
-4. Add an allow rule in the Bot so that call does not wait for approval.
+1. The relay must be reachable from the internet; a Bot's cloud computer cannot see `localhost`. Run a tunnel
+   (`cloudflared tunnel --url http://localhost:8787`) or deploy it.
+2. Put the settings in `apps/relay/.env.local` (not committed; the relay loads it on start):
+   `BOT_KEY=<a secret>`, `PUBLIC_URL=<the tunnel or deploy URL>`, and optionally `TURN_TIMEOUT_MS`.
+3. In the Bot, create a routine with a **webhook** trigger. Put its URL and key in `apps/relay/bots.json`:
+   `{ "u_you": { "url": "<routine webhook URL>", "key": "<routine key>" } }`. Restart the relay.
+4. Teach the routine: each run receives one turn as JSON:
+   `{ convId, role, step, ask: { kind, text }, history, otherCard, userId, replyTo }`. It answers in one or two
+   sentences without naming its owner, by sending `POST <replyTo>` with `Authorization: Bearer <BOT_KEY>` and
+   body `{ "convId", "text" }`, or `{ "convId", "withheld": "<topic>" }` for something it will not share.
+5. Add an allow rule in the Bot so that call does not wait for approval.
 
-Routines are limited to 200 runs an hour each, and a 200 from the webhook means the run started, not that it
-finished, so the relay waits `TURN_TIMEOUT_MS` and then falls back to the scripted Bot.
+Routines are limited to 200 runs an hour each, and one ask is 20 turns for the asker's Bot. A 200 from the
+webhook means the run started, not that it finished, so the relay waits `TURN_TIMEOUT_MS` and then falls back
+to the scripted Bot for that turn.

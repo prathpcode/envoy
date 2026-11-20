@@ -18,3 +18,4 @@ next-env.d.ts
 
 # real Bot webhook keys for the relay
 apps/relay/bots.json
+

@@ -15,10 +15,12 @@ const when = (iso: string) => new Date(iso).toLocaleString(undefined, { weekday:
 const call = (p: Promise<unknown>) => p.catch((e: Error) => toast.error(e.message));
 
 /** The one card on the map: ask, watch your bot work, approve, meet. What it shows depends on who is looking. */
-export function AskPanel({ as, state, online, onOpenConv, onFocusAsk }: {
+export function AskPanel({ as, state, online, onOpenConv, onFocusAsk, onNeedJoin }: {
   as: string; state: State; online: boolean; onOpenConv: (id: string) => void; onFocusAsk: (askId: string) => void;
+  /** Set while the viewer hasn't joined: the ask form shows as usual, and sending it starts onboarding with the ask held. */
+  onNeedJoin?: (text: string) => void;
 }) {
-  const spectator = as === "spectator";
+  const spectator = as === "spectator" && !onNeedJoin;
   const asks = state.askOrder.map((id) => state.asks[id]).filter(Boolean);
   const convsOf = (a: Ask) => a.convIds.map((id) => state.convs[id]).filter(Boolean);
   const mine = [...asks].reverse().find((a) => a.mine);
@@ -29,6 +31,7 @@ export function AskPanel({ as, state, online, onOpenConv, onFocusAsk }: {
 
   const send = async (t: string) => {
     if (!t.trim()) return;
+    if (onNeedJoin) { onNeedJoin(t.trim()); return; }
     setSending(true);
     try { await api("/asks", as, "POST", { text: t.trim() }); setText(""); setComposing(false); }
     catch (e) { toast.error((e as Error).message); }
@@ -56,7 +59,7 @@ export function AskPanel({ as, state, online, onOpenConv, onFocusAsk }: {
     );
   }
 
-  const active = !composing ? mine ?? incoming : undefined;
+  const active = !composing && !onNeedJoin ? mine ?? incoming : undefined;
   if (!active) {
     return (
       <ScrollCard className="flex flex-col gap-5 px-6 pb-7 pt-10">
@@ -105,7 +108,7 @@ export function AskPanel({ as, state, online, onOpenConv, onFocusAsk }: {
         return (
           <div key={m.matchId} className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
-              {other && <CharAvatar name={other.name} cell={4} walk />}
+              {other && <CharAvatar name={other.name} look={state.users[other.id]?.look} cell={4} walk />}
               <div className="flex min-w-0 flex-col gap-1">
                 <Badge tone="lime" tilt={2} className="self-start">Revealed</Badge>
                 <span className="text-2xl font-extrabold leading-tight text-ink">{other ? `Meet ${other.name}` : "Both said yes"}</span>

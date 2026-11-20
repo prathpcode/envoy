@@ -2,7 +2,8 @@
 // Nothing here knows more than the relay sent this viewer, so anonymity is not this file's job to keep.
 
 export type AskKind = "study" | "teammate" | "coffee" | "cofounder" | "advice";
-export type User = { id: string; name: string; place: string; kind: "you" | "real" | "persona" };
+export type Look = { skin?: number; hair?: number; style?: number; top?: number; glasses?: boolean };
+export type User = { id: string; name: string; place: string; kind: "you" | "real" | "persona"; look?: Look };
 export type Line = { from: string; text?: string; withheld?: string };
 export type Verdict = { fit: number; fitReason: string; willing: boolean; willingReason: string };
 export type Conv = { convId: string; askId: string; alias: string; you?: boolean; lines: Line[]; verdict?: Verdict; started: boolean };
