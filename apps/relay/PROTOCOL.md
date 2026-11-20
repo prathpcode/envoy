@@ -135,3 +135,14 @@ A student's own team of Grok Bots (`bots/` at the repo root) drives a round thro
 | `POST /meetings/:id/approve` | `{ slot? }` | A new `slot` moves the meeting and restarts both approvals |
 
 `POST /join` accepts `kind: "real"` for a student with their own Bots; nothing is auto-approved for them.
+
+### The web app as the front door
+
+| Method and path | Body | Effect |
+| --- | --- | --- |
+| `PUT /bot/hook` | `{ url, key }`, or `{}` to disconnect | Registers the student's Manager routine webhook. Returns `{ connected }`; the key is never sent back |
+| `GET /bot/hook` | | `{ connected }` |
+| `POST /asks` | `{ text }` | With a hook registered, the relay POSTs `{ ask, userId }` to it (Bearer key) and returns `{ forwarded: true }` instead of running its own round. A routine that cannot be reached is a `502` |
+| `POST /meetings/:id/propose` | `{ slot }` | Moves the slot without approving it; both approvals restart |
+
+`ask.queued` (`text`) goes to the asker only, between the wake and the Manager opening the round with `POST /bot/asks`.

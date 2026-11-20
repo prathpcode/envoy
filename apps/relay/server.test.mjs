@@ -144,3 +144,30 @@ test("a student's own Bots can drive a round through the Bot-facing API", async 
     assert.ok(!outside.includes(after.matches[0].person));
   } finally { me.stop(); spec.stop(); await R.close(); }
 });
+
+test("an ask typed in the web app wakes the student's own Manager Bot instead of the scripted round", async () => {
+  const http = await import("node:http"), got = [];
+  let status = 200;
+  const hook = http.createServer((req, res) => { let raw = ""; req.on("data", (c) => (raw += c)); req.on("end", () => { got.push({ auth: req.headers.authorization, body: JSON.parse(raw) }); res.writeHead(status); res.end(); }); });
+  await new Promise((r) => hook.listen(0, r));
+  const R = await boot(), me = R.watch("u_you"), spec = R.watch("spectator");
+  try {
+    assert.equal((await R.call("/bot/hook", "u_you")).body.connected, false);
+    const set = await R.call("/bot/hook", "u_you", "PUT", { url: `http://localhost:${hook.address().port}/run`, key: "routine-key" });
+    assert.deepEqual(set.body, { connected: true });                                  // the key is never echoed
+    assert.equal((await R.call("/state", "u_you")).body.me.botsConnected, true);
+
+    const sent = await R.call("/asks", "u_you", "POST", { text: "I need a study partner for Thursday's exam" });
+    assert.deepEqual(sent.body, { forwarded: true });
+    assert.deepEqual(got[0], { auth: "Bearer routine-key", body: { ask: "I need a study partner for Thursday's exam", userId: "u_you" } });
+    await me.until((e) => e.type === "ask.queued");
+    await new Promise((r) => setTimeout(r, 80));
+    assert.ok(!me.events.some((e) => e.type === "ask.posted"), "the relay does not run a scripted round for someone with their own Bots");
+    assert.ok(!JSON.stringify(spec.events).includes("ask.queued") && !JSON.stringify(spec.events).includes("routine-key"));
+
+    status = 500;
+    assert.equal((await R.call("/asks", "u_you", "POST", { text: "again" })).status, 502);
+    await R.call("/bot/hook", "u_you", "PUT", {});                                    // disconnect: back to the relay's own round
+    assert.ok((await R.call("/asks", "u_you", "POST", { text: "find me an iOS teammate" })).body.askId);
+  } finally { me.stop(); spec.stop(); await R.close(); await new Promise((r) => hook.close(r)); }
+});

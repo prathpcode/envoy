@@ -59,6 +59,21 @@ export function AskPanel({ as, state, online, onOpenConv, onFocusAsk, onNeedJoin
     );
   }
 
+  // typed here, running there: the student's own Grok Bots have been woken and have not opened the round yet
+  if (state.queued && !composing) {
+    return (
+      <ScrollCard className="flex flex-col gap-5 px-6 pb-6 pt-10">
+        <div className="flex flex-col gap-2">
+          <Badge tone="sky" tilt={-2} className="self-start">Your ask</Badge>
+          <p className="text-xl font-extrabold leading-snug text-ink">{state.queued.text}</p>
+        </div>
+        <Stepper steps={["Scout", "Talk", "Match", "Meet"]} current={0} />
+        <p className="text-base font-bold text-ink">Your Manager bot is awake and picking who to talk to.</p>
+        <Button variant="ghost" className="self-start text-ink" onClick={() => setComposing(true)}>Ask something else</Button>
+      </ScrollCard>
+    );
+  }
+
   const active = !composing && !onNeedJoin ? mine ?? incoming : undefined;
   if (!active) {
     return (

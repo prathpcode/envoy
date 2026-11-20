@@ -24,10 +24,12 @@ export type Ask = {
 export type State = {
   users: Record<string, User>; asks: Record<string, Ask>; convs: Record<string, Conv>;
   matches: Record<string, Match>; meetings: Record<string, Meeting>; askOrder: string[];
+  /** An ask typed here that the student's own Bots have been woken to run, until they open the round. */
+  queued: { text: string; at: number } | null;
 };
 export type GrokmateEvent = { seq: number; type: string; at: number | string } & Record<string, any>;
 
-export const empty = (): State => ({ users: {}, asks: {}, convs: {}, matches: {}, meetings: {}, askOrder: [] });
+export const empty = (): State => ({ users: {}, asks: {}, convs: {}, matches: {}, meetings: {}, askOrder: [], queued: null });
 
 export function reduce(s: State, e: GrokmateEvent): State {
   const ask = (id: string, patch: Partial<Ask>) => (s.asks[id] ? { ...s.asks, [id]: { ...s.asks[id], ...patch } } : s.asks);
@@ -35,9 +37,11 @@ export function reduce(s: State, e: GrokmateEvent): State {
   switch (e.type) {
     case "node.joined":
       return { ...s, users: { ...s.users, [e.user.id]: e.user } };
+    case "ask.queued":
+      return { ...s, queued: { text: e.text, at: typeof e.at === "number" ? e.at : Date.parse(e.at) } };
     case "ask.posted":
       return {
-        ...s, askOrder: [...s.askOrder.filter((x) => x !== e.askId), e.askId],
+        ...s, queued: e.mine ? null : s.queued, askOrder: [...s.askOrder.filter((x) => x !== e.askId), e.askId],
         asks: { ...s.asks, [e.askId]: { askId: e.askId, kind: e.kind, seats: e.seats, spot: e.spot, mine: !!e.mine, text: e.text, status: "scouting", convIds: [] } },
       };
     case "scout.picked": {

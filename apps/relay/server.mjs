@@ -24,7 +24,7 @@ export function createRelay() {
   function reset() {
     for (const t of timers) clearTimeout(t); timers.clear();
     S = { users: new Map(), cards: new Map(), rules: new Map(), facts: new Map(), accepts: new Map(), asks: new Map(), convs: new Map(),
-      matches: new Map(), meetings: new Map(), karma: [], log: [], spot: 0 };
+      matches: new Map(), meetings: new Map(), karma: [], log: [], spot: 0, hooks: new Map() };
     for (const p of [YOU, ...PERSONAS]) {
       addUser(p.user, p.card, p.rules, p.facts); S.accepts.set(p.user.id, p.recentAccepts);
       if (p.points) S.karma.push({ id: id("k"), userId: p.user.id, delta: p.points, reason: "seed", at: Date.now() });
@@ -86,6 +86,7 @@ export function createRelay() {
         if (e.type === "meeting.asked") return { ...base, meetingId: mt.id };
         return e.byUser === viewer ? { ...base, meetingId: mt.id, by: e.by, happened: e.happened } : null;
       }
+      case "ask.queued": return e.userId === viewer ? { ...base, text: e.text } : null;      // only the asker knows their Bots were woken
       case "karma.changed": return e.userId === viewer ? { ...base, userId: e.userId, delta: e.delta, total: e.total } : null;
       default: return null;
     }
@@ -207,12 +208,25 @@ export function createRelay() {
   const roleIn = (mt, userId) => (userId === mt.askerId ? "asker" : userId === mt.offererId ? "offerer" : null);
   function approveMeeting(mt, userId, slot) {
     const role = roleIn(mt, userId); if (!role) throw new Error("Not your meeting");
-    // a Scheduler Bot that read a real calendar can move the slot; that restarts both approvals
-    const moved = slot && !Number.isNaN(Date.parse(slot)) ? new Date(slot).toISOString() : null;
-    if (moved && moved !== mt.slot && mt.status === "proposed") { mt.slot = moved; mt.approvals = {}; announceMeeting(mt); }
+    if (slot) moveMeeting(mt, userId, slot);
     if (mt.approvals[role]) return;
     mt.approvals[role] = true; emit({ type: "meeting.approved", meetingId: mt.id, by: role });
     if (mt.approvals.asker && mt.approvals.offerer) { mt.status = "scheduled"; emit({ type: "meeting.scheduled", meetingId: mt.id }); }
+  }
+  /** A Scheduler Bot that read a real calendar can move the slot. That restarts both approvals and approves nothing. */
+  function moveMeeting(mt, userId, slot) {
+    if (!roleIn(mt, userId)) throw new Error("Not your meeting");
+    if (Number.isNaN(Date.parse(slot))) throw new Error("slot must be an ISO time");
+    const moved = new Date(slot).toISOString();
+    if (moved !== mt.slot && mt.status === "proposed") { mt.slot = moved; mt.approvals = {}; announceMeeting(mt); }
+  }
+  /** The web app is the front door: an ask typed there wakes the student's own Manager Bot through its routine webhook. */
+  async function wake(userId, hook, text) {
+    let r;
+    try { r = await fetch(hook.url, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${hook.key}` }, body: JSON.stringify({ ask: text, userId }), signal: AbortSignal.timeout(10000) }); }
+    catch { throw Object.assign(new Error("Could not reach your Manager Bot's routine"), { code: 502 }); }
+    if (!r.ok) throw Object.assign(new Error(`Your Manager Bot's routine answered ${r.status}`), { code: 502 });
+    emit({ type: "ask.queued", userId, text });
   }
   function confirmMeeting(mt, userId, happened, helpful) {
     const role = roleIn(mt, userId); if (!role) throw new Error("Not your meeting");
@@ -369,7 +383,8 @@ export function createRelay() {
     if (M === "GET" && parts[0] === "state") {
       const users = [...S.users.values()].map(({ id, name, place, kind, look }) => ({ id, name, place, kind, ...(look ? { look } : {}) }));
       const leaderboard = users.map((u) => ({ userId: u.id, name: u.name, points: total(u.id) })).sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
-      return json(res, 200, { me: users.find((u) => u.id === as) ?? null, users, leaderboard, clock: Date.now() });
+      const me = users.find((u) => u.id === as);
+      return json(res, 200, { me: me ? { ...me, botsConnected: S.hooks.has(as) } : null, users, leaderboard, clock: Date.now() });
     }
     if (parts[0] === "card" && parts[1]) {
       const card = need(S.cards, parts[1], "card"), own = as === parts[1];
@@ -394,7 +409,9 @@ export function createRelay() {
     if (M === "POST" && parts[0] === "onboard" && parts[1] === "chat") return json(res, 200, await interview(body));
     if (M === "POST" && parts[0] === "asks") {
       const text = String(body.text ?? "").trim(); if (!text) throw new Error("Say what you need");
-      return json(res, 200, { askId: postAsk(member(), text).id });
+      const me = member(), hook = S.hooks.get(me);
+      if (hook) { await wake(me, hook, text); return json(res, 200, { forwarded: true }); }     // their own Bots run the round
+      return json(res, 200, { askId: postAsk(me, text).id });
     }
     if (M === "POST" && parts[0] === "matches") {
       const m = need(S.matches, parts[1], "match"), ask = S.asks.get(m.askId), conv = S.convs.get(m.convId);
@@ -412,6 +429,7 @@ export function createRelay() {
         res.writeHead(200, { ...CORS, "content-type": "text/calendar", "content-disposition": 'attachment; filename="grokmate.ics"' }); return res.end(ics(mt));
       }
       if (M === "POST" && parts[2] === "approve") approveMeeting(mt, member(), body.slot);
+      if (M === "POST" && parts[2] === "propose") moveMeeting(mt, member(), body.slot);
       if (M === "POST" && parts[2] === "confirm") confirmMeeting(mt, member(), body.happened, body.helpful);
       return json(res, 200, { ok: true });
     }
@@ -425,6 +443,13 @@ export function createRelay() {
       const me = member();
       if (M === "GET" && parts[1] === "cards") return json(res, 200, { cards: botCards(me, url.searchParams.get("kind")) });
       if (M === "GET" && parts[1] === "inbox") return json(res, 200, inbox(me));
+      if (parts[1] === "hook") {
+        if (M === "PUT") {
+          if (!body.url) S.hooks.delete(me);
+          else { if (!/^https?:\/\//.test(String(body.url)) || !body.key) throw new Error("Give the routine's url and key"); S.hooks.set(me, { url: String(body.url), key: String(body.key) }); }
+        }
+        return json(res, 200, { connected: S.hooks.has(me) });       // the key itself is never sent back
+      }
       if (M === "POST" && parts[1] === "asks" && !parts[2]) return json(res, 200, botAsk(me, body));
       if (parts[1] === "asks" && parts[2]) {
         const ask = need(S.asks, parts[2], "ask");

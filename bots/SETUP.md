@@ -32,7 +32,21 @@ other four know who you are.
 Tell the Manager: "I need a study partner for Thursday's linear algebra exam." Watch it on the map at
 `http://localhost:3001/?as=<your id>` (the Onboarder tells you your id).
 
-## 4. Publish the templates
+## 4. Make the web app the front door
+
+So a student types the ask in the web app instead of in a Bot's chat:
+
+1. On the Manager, create a routine with a **Webhook** trigger whose instruction is:
+   "Run the Grokmate Manager skill on the ask in the request body."
+2. Copy the routine's URL and key, and tell the Manager:
+   "Connect the web app. URL: <url>. Key: <key>."
+3. From then on, "Send my bot" in the web app wakes the Manager. Approving the match and the time, and
+   confirming the meeting, are buttons in the web app.
+
+To go back to the relay's own scripted round, tell the Manager "disconnect the web app" (it sends an empty
+`PUT /bot/hook`).
+
+## 5. Publish the templates
 
 For each Bot: click its name → **Share** → **Create a copy** → **Publish** → **Copy link**. Open each link
 from another account and check the skill arrived before you submit it. Replace your tunnel address with
