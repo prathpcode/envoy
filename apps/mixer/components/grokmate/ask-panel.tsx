@@ -229,11 +229,12 @@ function MeetingRow({ as, meeting, role }: { as: string; meeting: Meeting; role:
   return (
     <div className="flex flex-col gap-3 border-t-4 border-dotted border-ink/20 pt-4">
       <span className="flex items-center gap-2 text-xl font-extrabold text-ink"><Calendar className="pixel-icon size-6" /> {when(meeting.slot)}</span>
+      {meeting.place && <span className="text-base font-bold text-ink-soft">{meeting.place.name}</span>}
       {meeting.status === "proposed" && (meeting.approved[role]
         ? <p className="text-base font-bold text-ink-soft">You&apos;re in. Waiting for them to approve the time.</p>
         : <div className="flex flex-col items-start gap-2">
             <p className="text-base font-medium text-ink">Both bots compared calendars. This is the first slot you&apos;re both free.</p>
-            <Button tilt={-2} onClick={() => call(api(`/meetings/${meeting.meetingId}/approve`, as, "POST"))}>Approve the time</Button>
+            <Button tilt={-2} onClick={() => call(api(`/meetings/${meeting.meetingId}/approve`, as, "POST"))}>Book it</Button>
           </div>)}
       {meeting.status === "scheduled" && (
         <div className="flex flex-wrap items-center gap-4">

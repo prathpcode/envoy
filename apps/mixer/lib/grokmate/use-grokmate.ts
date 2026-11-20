@@ -5,11 +5,6 @@ import { empty, reduce, edgeState, type GrokmateEvent, type State } from "./stor
 export const RELAY =
   process.env.NEXT_PUBLIC_RELAY_URL ?? (typeof window === "undefined" ? "http://localhost:8787" : `http://${window.location.hostname}:8787`);
 
-/** Every conversation in the ask has reached a verdict. */
-const askDone = (s: State, askId?: string) => {
-  const ids = askId ? s.asks[askId]?.convIds : undefined;
-  return !!ids?.length && ids.every((id) => s.convs[id]?.verdict);
-};
 
 export type Row ={ userId: string; name: string; points: number };
 type Snapshot = { me?: { id: string; name: string } | null; leaderboard: Row[] };
@@ -71,7 +66,7 @@ export function useGrokmate(as: string | null, frame: React.RefObject<HTMLIFrame
       setState(s);
       // mirror onto the map
       if (e.type === "node.joined") post({ type: "grokmate:nodes", nodes: [{ ...e.user, me: e.user.id === as }] });
-      if (e.type === "scout.picked") { const a = s.asks[e.askId]; post({ type: "grokmate:ask", askId: e.askId, spot: a?.spot, mine: a?.mine, candidates: e.candidates, fly: fresh && (a?.mine || as === "spectator") }); }
+      if (e.type === "scout.picked") { const a = s.asks[e.askId]; post({ type: "grokmate:ask", askId: e.askId, spot: a?.spot, mine: a?.mine, candidates: e.candidates, fresh, fly: fresh && (a?.mine || as === "spectator") }); }
       if (e.type === "conv.started" || e.type === "conv.verdict" || e.type === "match.revealed") {
         const c = s.convs[e.convId]; if (c) post({ type: "grokmate:edge", convId: c.convId, askId: c.askId, alias: c.alias, state: edgeState(c, Object.values(s.matches)) });
       }
@@ -81,14 +76,17 @@ export function useGrokmate(as: string | null, frame: React.RefObject<HTMLIFrame
         // only the two parties get names, so only they see the envoys drop their masks
         post({ type: "grokmate:reveal", askId: e.askId, alias: e.alias, asker: e.asker.name, offerer: e.offerer.name, askerId: e.asker.id, offererId: e.offerer.id });
       }
-      if (e.type === "karma.changed") { refreshBoard(); if (fresh && e.userId === as) setLastKarma({ delta: e.delta, at: Date.now() }); }
-      // once the asker's bot has heard back from every candidate, its huddle breaks up and leaves the map.
-      // live, let the last verdict colour show for a beat first; on replay, clear straight away
-      if (e.type === "conv.verdict" && askDone(s, e.askId ?? s.convs[e.convId]?.askId)) {
-        const askId = e.askId ?? s.convs[e.convId].askId;
-        if (!fresh) post({ type: "grokmate:clearAsk", askId });
-        else { const t = setTimeout(() => { clears.delete(t); if (askDone(live.current, askId)) post({ type: "grokmate:clearAsk", askId }); }, 2500); clears.add(t); }
+      // the end of a round: the matched pair walks off together to where they will meet, everyone else heads home
+      if (e.type === "match.revealed") {
+        const c = s.convs[e.convId], mt = Object.values(s.meetings).find((x) => x.matchId === e.matchId);
+        if (c) post({ type: "grokmate:matched", askId: c.askId, alias: c.alias, place: mt?.place?.key, fresh });
       }
+      if (e.type === "meeting.proposed" && e.place) {
+        const m = s.matches[e.matchId], c = m ? s.convs[m.convId] : undefined;
+        if (c) post({ type: "grokmate:matched", askId: c.askId, alias: c.alias, place: e.place.key, fresh });
+      }
+      if (e.type === "ask.open") post({ type: "grokmate:clearAsk", askId: e.askId, fresh });
+      if (e.type === "karma.changed") { refreshBoard(); if (fresh && e.userId === as) setLastKarma({ delta: e.delta, at: Date.now() }); }
     };
     return () => { es.close(); setOnline(false); for (const t of clears) clearTimeout(t); clears.clear(); };
   }, [as, post, refreshBoard]);

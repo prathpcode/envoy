@@ -14,7 +14,7 @@ export type Match = {
   awaiting: "asker" | "offerer" | null; status: "proposed" | "revealed" | "declined"; asker?: Person; offerer?: Person;
 };
 export type Meeting = {
-  meetingId: string; matchId: string; askId: string; slot: string;
+  meetingId: string; matchId: string; askId: string; slot: string; place?: { key: string; name: string };
   approved: { asker?: boolean; offerer?: boolean }; status: "proposed" | "scheduled" | "asked" | "confirmed"; happened?: boolean;
 };
 export type Ask = {
@@ -80,13 +80,13 @@ export function reduce(s: State, e: GrokmateEvent): State {
     case "ask.open": return { ...s, asks: ask(e.askId, { status: "open" }) };
     case "ask.filled": return { ...s, asks: ask(e.askId, { status: "filled" }) };
     case "meeting.proposed":
-      return { ...s, meetings: { ...s.meetings, [e.meetingId]: { meetingId: e.meetingId, matchId: e.matchId, askId: e.askId, slot: e.slot, approved: {}, status: "proposed" } } };
+      return { ...s, meetings: { ...s.meetings, [e.meetingId]: { meetingId: e.meetingId, matchId: e.matchId, askId: e.askId, slot: e.slot, place: e.place, approved: {}, status: "proposed" } } };
     case "meeting.approved": {
       const m = s.meetings[e.meetingId]; if (!m) return s;
       return { ...s, meetings: { ...s.meetings, [e.meetingId]: { ...m, approved: { ...m.approved, [e.by]: true } } } };
     }
     case "meeting.scheduled": {
-      const m = s.meetings[e.meetingId] ?? { meetingId: e.meetingId, matchId: e.matchId, askId: e.askId, slot: e.slot, approved: {} };
+      const m = s.meetings[e.meetingId] ?? { meetingId: e.meetingId, matchId: e.matchId, askId: e.askId, slot: e.slot, place: e.place, approved: {} };
       return { ...s, meetings: { ...s.meetings, [e.meetingId]: { ...m, status: "scheduled" } as Meeting } };
     }
     case "meeting.asked": {

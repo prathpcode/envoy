@@ -5,7 +5,7 @@ const { createRelay } = await import("./server.mjs");
 const { YOU, PERSONAS } = await import("./seed.mjs");
 
 async function boot() {
-  const server = createRelay(); await new Promise((r) => server.listen(0, r));
+  const server = createRelay({ cast: [YOU, ...PERSONAS] }); await new Promise((r) => server.listen(0, r));
   const base = `http://localhost:${server.address().port}`;
   const call = async (path, as, method = "GET", body) => {
     const r = await fetch(`${base}${path}${path.includes("?") ? "&" : "?"}as=${as}`, { method, headers: { "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });

@@ -1,4 +1,4 @@
-// Sample content. Every person here is fictional; none of this describes a real student.
+// Sample content. The personas in PERSONAS and YOU are fictional; CAST (the demo cast) is the real team, with cards they can edit.
 // Each persona has a public card (offers, openTo, affiliation), private memory facts tagged by topic,
 // and disclosure rules. A topic that is not listed under `hide` may be shared.
 
@@ -104,6 +104,23 @@ export const PERSONAS = [
     projects: ["Has built three hackathon apps this year on Firebase."],
     availability: ["Already on a team this weekend."],
   }, { points: 75, recentAccepts: 3 }),
+];
+
+// The demo cast: the only people on campus when the relay starts. Everyone else joins through onboarding.
+// Open to every kind of ask, so any ask a newcomer sends finds all three. Edit the cards to match the real people.
+export const CAST = [
+  P("u_gautam", "Gautam Anand", "wilbur", "Wilbur Hall", ["Full-stack web apps", "Multiplayer games", "Shipping side projects fast"], ["study", "teammate", "coffee", "cofounder", "advice"], ["grades", "contact"], {
+    projects: ["Builds and runs web games with a big player base.", "Ships hackathon projects end to end."],
+    availability: ["Free most evenings, and weekend afternoons."],
+  }, { points: 40 }),
+  P("u_devesh", "Devesh Aggarwal", "toyon", "Toyon Hall", ["iOS and React Native apps", "Startup pitch decks", "Hackathon teammate"], ["study", "teammate", "coffee", "cofounder", "advice"], ["grades", "contact"], {
+    projects: ["Has built mobile apps for two hackathon wins."], startup: ["Thinking about starting a company after graduating."],
+    availability: ["Free Thursday afternoons and Saturdays."],
+  }, { points: 35 }),
+  P("u_suhurrith", "Suhurrith Adhikari", "branner", "Branner Hall", ["Machine learning and LLM apps", "Python and data analysis", "CS 229 study help"], ["study", "teammate", "coffee", "cofounder", "advice"], ["grades", "contact"], {
+    projects: ["Built an LLM agent that books meetings."], classes: ["Taking CS 229 and CS 224N this quarter."],
+    availability: ["Free weekday mornings and Sunday evenings."],
+  }, { points: 30 }),
 ];
 
 export const SPOTS = ["quad", "oval", "whiteplaza", "meyer", "engquad"];

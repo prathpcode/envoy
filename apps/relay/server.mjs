@@ -2,7 +2,7 @@
 import http from "node:http";
 import { inferAsk, scout, finalize, promote, karmaFor } from "./rules.mjs";
 import { scripted, webhookDriver, xaiDriver, botHooks, resolveBotTurn, enforce, scoreFit, answerFor, judgeFit, TOPICS_FOR } from "./bots.mjs";
-import { YOU, PERSONAS, SPOTS } from "./seed.mjs";
+import { YOU, PERSONAS, CAST, SPOTS } from "./seed.mjs";
 import { interview, sanitize, whoIs, lookFromSelfie, suggestProfile, TOPICS } from "./onboard.mjs";
 import * as google from "./google.mjs";
 
@@ -11,10 +11,14 @@ if (!process.env.NODE_TEST_CONTEXT) try { process.loadEnvFile(new URL("./.env.lo
 const env = (k, d) => Number(process.env[k] ?? d);
 const PACE = env("PACE_MS", 900), APPROVAL_TIMEOUT = env("APPROVAL_TIMEOUT_MS", 60000), TURN_TIMEOUT = env("TURN_TIMEOUT_MS", 20000);
 const AUTO = Math.min(2500, PACE * 3), TURNS = 8;
+// where a matched pair meets: the key is a place on the campus map (PLACES in apps/mixer/public/map/iso.html)
+const MEET_PLACES = [{ key: "tresidder", name: "Coupa Café, Tresidder" }, { key: "green", name: "Green Library steps" }, { key: "dschool", name: "the d.school" },
+  { key: "huang", name: "Huang lawn" }, { key: "gates", name: "Gates courtyard" }];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const hooks = botHooks();
 
-export function createRelay() {
+/** `cast` is who is on campus at the start: the demo cast by default; the tests pass the full sample network. */
+export function createRelay({ cast = CAST } = {}) {
   let S, n = 0;
   const id = (p) => `${p}_${(++n).toString(36)}`;
   const clients = new Set();                         // { viewer, res, seq }
@@ -25,7 +29,7 @@ export function createRelay() {
     for (const t of timers) clearTimeout(t); timers.clear();
     S = { users: new Map(), cards: new Map(), rules: new Map(), facts: new Map(), accepts: new Map(), asks: new Map(), convs: new Map(),
       matches: new Map(), meetings: new Map(), karma: [], log: [], spot: 0, hooks: new Map() };
-    for (const p of [YOU, ...PERSONAS]) {
+    for (const p of cast) {
       addUser(p.user, p.card, p.rules, p.facts); S.accepts.set(p.user.id, p.recentAccepts);
       if (p.points) S.karma.push({ id: id("k"), userId: p.user.id, delta: p.points, reason: "seed", at: Date.now() });
     }
@@ -79,9 +83,9 @@ export function createRelay() {
       case "ask.open": case "ask.filled": return { ...base, askId: ask.id };
       case "meeting.proposed": case "meeting.approved": case "meeting.asked": case "meeting.confirmed": case "meeting.scheduled": {
         const mt = S.meetings.get(e.meetingId), party = viewer === mt.askerId || viewer === mt.offererId;
-        if (e.type === "meeting.scheduled") return { ...base, meetingId: mt.id, matchId: mt.matchId, askId: mt.askId, slot: mt.slot };
+        if (e.type === "meeting.scheduled") return { ...base, meetingId: mt.id, matchId: mt.matchId, askId: mt.askId, slot: mt.slot, place: mt.place };
         if (!party) return null;
-        if (e.type === "meeting.proposed") return { ...base, meetingId: mt.id, matchId: mt.matchId, askId: mt.askId, slot: mt.slot };
+        if (e.type === "meeting.proposed") return { ...base, meetingId: mt.id, matchId: mt.matchId, askId: mt.askId, slot: mt.slot, place: mt.place };
         if (e.type === "meeting.approved") return { ...base, meetingId: mt.id, by: e.by };
         if (e.type === "meeting.asked") return { ...base, meetingId: mt.id };
         return e.byUser === viewer ? { ...base, meetingId: mt.id, by: e.by, happened: e.happened } : null;
@@ -125,7 +129,11 @@ export function createRelay() {
     ask.status = "talking";
     const verdicts = await Promise.all(convs.map((c, i) => sleep(i * Math.min(400, PACE / 2)).then(() => runConv(ask, c))));
     if (!S.asks.has(ask.id)) return;                 // reset mid-round
-    ask.queue = [...ask.queue, ...finalize(verdicts.filter(Boolean), ask.seats).ranked];
+    const heard = verdicts.filter(Boolean);
+    let ranked = finalize(heard, ask.seats).ranked;
+    // every round ends with a match: if nobody cleared the bar, the closest fit still goes forward
+    if (!ranked.length && heard.length) ranked = [[...heard].sort((a, b) => b.fit - a.fit)[0]];
+    ask.queue = [...ask.queue, ...ranked];
     ask.status = "matching"; proposeNext(ask);
   }
   async function runConv(ask, conv) {
@@ -203,7 +211,8 @@ export function createRelay() {
   // ---- the meeting ----
   function proposeMeeting(m, ask, conv) {
     const slot = new Date(); slot.setDate(slot.getDate() + 1); slot.setHours(16, 0, 0, 0);
-    const mt = { id: id("meet"), matchId: m.id, askId: ask.id, askerId: ask.askerId, offererId: conv.offererId, slot: slot.toISOString(), approvals: {}, says: {}, status: "proposed", brief: m.brief };
+    const place = MEET_PLACES[S.meetings.size % MEET_PLACES.length];
+    const mt = { id: id("meet"), matchId: m.id, askId: ask.id, askerId: ask.askerId, offererId: conv.offererId, slot: slot.toISOString(), place, approvals: {}, says: {}, status: "proposed", brief: m.brief };
     S.meetings.set(mt.id, mt);
     announceMeeting(mt);
   }
@@ -363,7 +372,7 @@ export function createRelay() {
   function ics(mt) {
     const z = (d) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, ""), start = new Date(mt.slot), end = new Date(start.getTime() + 30 * 60000);
     return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Grokmate//Relay//EN", "BEGIN:VEVENT", `UID:${mt.id}@grokmate`, `DTSTAMP:${z(new Date())}`, `DTSTART:${z(start)}`, `DTEND:${z(end)}`,
-      "SUMMARY:Grokmate: meet your match", `DESCRIPTION:${`${mt.brief.why} Talk about: ${mt.brief.talkAbout.join(", ")}`.replace(/[,;\\]/g, (c) => `\\${c}`)}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+      "SUMMARY:Grokmate: meet your match", `LOCATION:${mt.place.name}`, `DESCRIPTION:${`${mt.brief.why} Talk about: ${mt.brief.talkAbout.join(", ")}`.replace(/[,;\\]/g, (c) => `\\${c}`)}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
   }
 
   // ---- HTTP ----

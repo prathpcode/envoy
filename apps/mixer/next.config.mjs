@@ -9,5 +9,7 @@ const nextConfig = {
   outputFileTracingRoot: root,
   turbopack: { root },
   devIndicators: false,
+  // the dev server is shared through a Cloudflare tunnel
+  allowedDevOrigins: ["grokmate.codergaut.am", "*.trycloudflare.com"],
 };
 export default nextConfig;

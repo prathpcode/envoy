@@ -145,9 +145,22 @@ function dress(b) {
   const name = b.revealed ?? (b.you ? meName : null);
   b.t = name ? lookTraits(name, b.revealedLook ?? (b.you && !b.revealed ? meLook : null)) : traits("grokmate:" + b.standIn); b.key = "";
 }
-function envoy(alias, x, y, you, convId, askId) {
-  const b = Object.assign(token(alias, x, y, null), { alias, you: !!you, masked: true, convId, standIn: convId ?? askId + ":" + alias });
-  dress(b); return b;
+const HANDLES = ["Comet", "Maple", "Pixel", "Juniper", "Echo", "Biscuit", "Nova", "Pepper", "Orbit", "Mochi", "Sprout", "Indigo", "Tango", "Clover", "Ziggy", "Basil"];
+const handleOf = (k) => { let h = 0; for (const ch of String(k)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return HANDLES[h % HANDLES.length]; };
+// an envoy walks: from (fx, fy) to its spot (x, y). With no start it simply stands there (a replay, not a live arrival)
+function envoy(alias, x, y, you, convId, askId, from) {
+  const [fx, fy] = from ?? [x, y];
+  const b = Object.assign(token(alias, fx, fy, null), { alias, you: !!you, masked: true, convId, standIn: convId ?? askId + ":" + alias, handle: handleOf(convId ?? askId + ":" + alias) });
+  b.tx = x; b.ty = y; dress(b); return b;
+}
+// a point well outside the huddle in the direction of (x, y), where an envoy arrives from and leaves to
+function outside(c, x, y, far = 520) { const a = Math.atan2(y - c[1], x - c[0]); return [c[0] + Math.cos(a) * far, c[1] + Math.sin(a) * far * 0.7]; }
+/** Envoys walk at a pace that covers any trip in a few seconds, so the round reads as people moving, not jumping. */
+function march(b, dt) {
+  const dx = b.tx - b.x, dy = b.ty - b.y, d = Math.hypot(dx, dy);
+  if (d < 1.5) { b.x = b.tx; b.y = b.ty; b.vx = b.vy = 0; return true; }
+  const step = Math.min(d, Math.max(70, (b.trip ?? d) / 4.5) * dt);
+  b.vx = dx / d; b.vy = dy / d; b.x += b.vx * step; b.y += b.vy * step; return false;
 }
 function addNode(u) {
   if (u.me && (meName !== u.name || meLook !== (u.look ?? null))) { meName = u.name; meLook = u.look ?? null; for (const a of asks.values()) for (const b of a.envoys.values()) if (b.you) dress(b); }
@@ -161,20 +174,44 @@ function addNode(u) {
 function addAsk(m) {
   const had = asks.get(m.askId);
   if (had) {
-    // a re-scored ask: latecomers stand on a wider ring
+    // a re-scored ask: latecomers walk in to a wider ring
     for (const cand of m.candidates ?? []) if (!had.envoys.has(cand.alias)) {
       const a = had.envoys.size * 1.9, x = had.c[0] + Math.cos(a) * 400, y = had.c[1] + Math.sin(a) * 250;
-      had.envoys.set(cand.alias, envoy(cand.alias, x, y, cand.you, cand.convId));
+      had.envoys.set(cand.alias, envoy(cand.alias, x, y, cand.you, cand.convId, m.askId, m.fresh ? outside(had.c, x, y) : null));
     }
     return;
   }
   const c = fromLatLon(...(SPOTS[m.spot] ?? SPOTS.quad)), envoys = new Map(), list = m.candidates ?? [];
-  envoys.set("Asker", envoy("Asker", c[0], c[1], m.mine, undefined, m.askId));
+  const me = [...nodes.values()].find((n) => n.me);
+  envoys.set("Asker", envoy("Asker", c[0], c[1], m.mine, undefined, m.askId, m.fresh ? (m.mine && me ? [me.x, me.y] : outside(c, c[0] - 1, c[1] + 1)) : null));
   list.forEach((cand, i) => {
     const a = -Math.PI / 2 + (i / list.length) * 6.283, x = c[0] + Math.cos(a) * 270, y = c[1] + Math.sin(a) * 175;
-    envoys.set(cand.alias, envoy(cand.alias, x, y, cand.you, cand.convId));
+    envoys.set(cand.alias, envoy(cand.alias, x, y, cand.you, cand.convId, m.askId, m.fresh ? outside(c, x, y) : null));
   });
+  for (const b of envoys.values()) b.trip = Math.hypot(b.tx - b.x, b.ty - b.y);
   asks.set(m.askId, { c, envoys }); dirty = true;
+}
+/** The end of a round: the matched pair walks off together to where they'll meet; everyone else heads home. */
+function wrapAsk(askId, alias, placeKey, fresh) {
+  const a = asks.get(askId); if (!a) return;
+  const spot = fromLatLon(...(PLACES[placeKey] ?? PLACES.tresidder));
+  a.matched = alias; a.place = placeKey;
+  for (const [k, b] of a.envoys) {
+    if (k === "Asker" || k === alias) {
+      const side = k === "Asker" ? -1 : 1, p = nearCapped([spot[0] + side * 26, spot[1]], 200);
+      b.tx = p[0]; b.ty = p[1]; b.face = -side; b.leaving = false;
+    } else if (!b.leaving) { const o = outside(a.c, b.x, b.y, 900); b.tx = o[0]; b.ty = o[1]; b.leaving = true; b.face = 0; }
+    b.trip = Math.hypot(b.tx - b.x, b.ty - b.y);
+    if (!fresh) { b.x = b.tx; b.y = b.ty; }
+  }
+  if (!fresh) for (const [k, b] of a.envoys) if (b.leaving) a.envoys.delete(k);
+  dirty = true;
+}
+/** No match after all: the whole huddle walks off. */
+function leaveAsk(askId, fresh) {
+  const a = asks.get(askId); if (!a) return;
+  if (!fresh) { asks.delete(askId); return; }
+  for (const b of a.envoys.values()) { const o = outside(a.c, b.x + (b === a.envoys.get("Asker") ? 1 : 0), b.y, 900); b.tx = o[0]; b.ty = o[1]; b.leaving = true; b.trip = Math.hypot(b.tx - b.x, b.ty - b.y); }
 }
 function wander(b, dt) {
   if (b.masked) return;
@@ -202,7 +239,7 @@ function line(ax, ay, bx, by, color, dashOffset) {
   if (dashOffset !== null) { ctx.setLineDash([6 * U(), 6 * U()]); ctx.lineDashOffset = dashOffset; }
   ctx.strokeStyle = color; ctx.lineWidth = 2 * U(); ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke(); ctx.setLineDash([]);
 }
-function ends(e) { const a = asks.get(e.askId); if (!a) return null; const p = a.envoys.get("Asker"), q = a.envoys.get(e.alias); return p && q ? [p, q] : null; }
+function ends(e) { const a = asks.get(e.askId); if (!a || a.matched) return null; const p = a.envoys.get("Asker"), q = a.envoys.get(e.alias); return p && q ? [p, q] : null; }
 function drawEdges(now) {
   const mid = (b) => [Math.round(((b.x - cx) * s + VW / 2) * DPR), Math.round(((b.y - cy) * s + VH / 2 - 9 * cellCss()) * DPR)];
   for (const e of edges.values()) {
@@ -222,6 +259,7 @@ function drawEdges(now) {
 function drawToken(b, now) {
   const cell = cellCss() * Math.round(DPR), w = FOOT.w * cell, h = FOOT.h * cell;
   let view = "front", flip = false, frame = -1;
+  if (b.masked && b.face) { view = "side"; flip = b.face < 0; }   // a pair that has arrived stands facing each other
   if (Math.hypot(b.vx, b.vy) > 0.01) {
     if (Math.abs(b.vx) > Math.abs(b.vy) * 1.2) { view = "side"; flip = b.vx < 0; } else view = b.vy < 0 ? "back" : "front";
     frame = reduceMotion ? 0 : Math.floor(now / 125) % 4;
@@ -244,7 +282,7 @@ function drawToken(b, now) {
   const top = Y - dh;
   if (b.masked) {
     // the alias is all anyone gets: a letter on a paper chip, until a reveal puts a first name on it
-    const label = b.you ? "You" : b.revealed ? b.revealed.trim().split(/\s+/)[0] : b.alias === "Asker" ? "?" : b.alias;
+    const label = b.you ? "You" : b.revealed ? b.revealed.trim().split(/\s+/)[0] : b.handle;
     ctx.font = `800 ${14 * DPR}px "Bricolage Grotesque Variable", system-ui, sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     const tw = Math.max(22 * DPR, ctx.measureText(label).width + 12 * DPR), th = 22 * DPR;
     ctx.fillStyle = "#ffffff"; ctx.fillRect(Math.round(X - tw / 2) - u, top - th - u, tw + 2 * u, th + 2 * u);
@@ -277,6 +315,10 @@ function loop(now) {
     if (Math.hypot(focusTo[0] - cx, focusTo[1] - cy) < 1 || k === 1) focusTo = null;
   }
   if (!reduceMotion) for (const b of nodes.values()) wander(b, dt);
+  for (const [askId, a] of asks) {
+    for (const [k, b] of a.envoys) { const there = reduceMotion ? ((b.x = b.tx), (b.y = b.ty), true) : march(b, dt); if (there && b.leaving) a.envoys.delete(k); }
+    if (!a.envoys.size) { asks.delete(askId); for (const [k, v] of edges) if (v.askId === askId) edges.delete(k); }
+  }
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = "#4f7a45"; ctx.fillRect(0, 0, cvs.width, cvs.height); drawTiles(); drawBots(now); dirty = false;
   requestAnimationFrame(loop);
 }
@@ -298,7 +340,8 @@ addEventListener("message", (e) => {
       const b = a?.envoys.get(alias); if (b && name) { b.revealed = name; b.revealedLook = nodes.get(uid)?.look ?? null; dress(b); }
     }
   }
-  if (m.type === "grokmate:clearAsk") { asks.delete(m.askId); for (const [k, v] of edges) if (v.askId === m.askId) edges.delete(k); }
+  if (m.type === "grokmate:clearAsk") leaveAsk(m.askId, m.fresh);
+  if (m.type === "grokmate:matched") wrapAsk(m.askId, m.alias, m.place, m.fresh);
   if (m.type === "grokmate:focus") {
     const n = m.id ? nodes.get(m.id) : null, a = m.askId ? asks.get(m.askId) : null;
     if (n) { selected = n.id; flyTo(n.x, n.y, 0.8); } else if (a) flyTo(a.c[0], a.c[1], 0.75);
@@ -344,7 +387,7 @@ cvs.addEventListener("pointerup", up); cvs.addEventListener("pointercancel", up)
 addEventListener("resize", () => { resize(); dirty = true; });
 
 const note = document.createElement("div"); note.className = "note";
-if (EMBED) { note.textContent = "sample people"; note.style.right = "8px"; }
+if (EMBED) { note.textContent = ""; note.style.right = "8px"; }
 else { note.textContent = "drag to pan · scroll to zoom"; note.style.left = "8px"; }
 document.body.appendChild(note);
 
