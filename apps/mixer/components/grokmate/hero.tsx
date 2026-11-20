@@ -59,7 +59,7 @@ export function Hero({ bots, onJoin, onRoster }: { bots: Bot[]; onJoin: () => vo
 
       <Card className="flex flex-col gap-5 px-6 pb-7 pt-10 md:px-8">
         <Display className="!text-5xl md:!text-[4rem] text-ink">
-          Your personal AI wingman{" "}
+          Your personal AI networker{" "}
           <span className="inline-block crooked align-[-0.1em]" style={tilt(4)}>
             <CharAvatar name="Grokmate" cell={2} walk label="your wingman bot" />
           </span>{" "}

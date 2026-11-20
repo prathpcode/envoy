@@ -235,6 +235,8 @@ export function createRelay() {
     if ("glasses" in l) out.glasses = !!l.glasses;
     return out;
   }
+  // busy intervals from Google free/busy: ISO start/end pairs only, at most 300
+  const cleanBusy = (xs) => xs.slice(0, 300).map((b) => ({ start: new Date(b?.start), end: new Date(b?.end) })).filter((b) => !isNaN(b.start) && !isNaN(b.end) && b.end > b.start).map((b) => ({ start: b.start.toISOString(), end: b.end.toISOString() }));
   function join(body) {
     const uid = id("u"), name = String(body.name ?? "").trim(); if (!name) throw new Error("A name is required");
     // a real person from onboarding brings their own facts, rules and look; the demo desk's newcomers get defaults
@@ -242,7 +244,7 @@ export function createRelay() {
     const openTo = real ? p.openTo : Array.isArray(body.openTo) ? body.openTo : [], offers = real ? p.offers : Array.isArray(body.offers) ? body.offers.map(String) : [];
     const hide = real ? p.hide : ["grades", "contact"];
     const look = body.look && typeof body.look === "object" ? cleanLook(body.look) : undefined;
-    addUser({ id: uid, name, place: String(body.place ?? "tresidder"), kind: real ? "real" : "persona", ...(look ? { look } : {}), ...(body.linkedin ? { linkedin: String(body.linkedin) } : {}) },
+    addUser({ id: uid, name, place: String(body.place ?? "tresidder"), kind: real ? "real" : "persona", ...(look ? { look } : {}), ...(body.linkedin ? { linkedin: String(body.linkedin) } : {}), ...(real && Array.isArray(body.busy) ? { busy: cleanBusy(body.busy) } : {}) },
       { userId: uid, offers, openTo, affiliation: String(body.affiliation ?? "") },
       TOPICS.map((topic) => ({ topic, share: !hide.includes(topic) })),
       real ? p.facts : [{ topic: "availability", text: "Free most afternoons this week." }]);
@@ -290,7 +292,7 @@ export function createRelay() {
         for (const k of ["offers", "openTo", "affiliation"]) if (k in body) card[k] = body[k];
         if (Array.isArray(body.rules)) S.rules.set(as, body.rules.map((r) => ({ topic: String(r.topic), share: !!r.share })));
       }
-      return json(res, 200, { card, ...(own ? { disclosure: { rules: S.rules.get(as) } } : {}) });
+      return json(res, 200, { card, ...(own ? { disclosure: { rules: S.rules.get(as) }, busy: S.users.get(as)?.busy ?? null } : {}) });
     }
     if (M === "POST" && parts[0] === "join") return json(res, 200, join(body));
     if (M === "GET" && parts[0] === "oauth" && parts[1] === "google") {

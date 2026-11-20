@@ -12,7 +12,7 @@ import { KIND_LABEL, TOPIC_LABEL } from "@/lib/grokmate/store";
 // socials (LinkedIn among them), then confirm the card your bot will show. Nothing is saved until you drop onto campus.
 
 type Fact = { topic: string; text: string };
-type Profile = { facts: Fact[]; offers: string[]; openTo: string[]; hide: string[] };
+type Profile = { facts: Fact[]; offers: string[]; openTo: string[]; hide: string[]; busy?: { start: string; end: string }[] };
 type Mode = "idle" | "thinking" | "speaking" | "listening";
 
 const slugOf = (url: string) => url.trim().match(/linkedin\.com\/in\/([^/?#]+)/i)?.[1] ?? (/^[\w-]+$/.test(url.trim()) ? url.trim() : "");
@@ -269,26 +269,6 @@ function LookStep({ name, photo, look, setLook, onRetake, onDone }: {
 
 // ---- connect: Google Calendar (free/busy only) and your own links, which Grok reads to suggest your card ----
 type Gcal = { email?: string | null; busy?: { start: string; end: string }[]; error?: string };
-/**
- * The real gaps in someone's week, in their own timezone: every free stretch of 45 minutes or more between 9am and
- * 9pm over the next 7 days, e.g. "Thu 2:30–5pm". This is what their bot works from when it schedules.
- */
-function freeWindows(busy: Gcal["busy"] = [], now = new Date()) {
-  const spans = busy.map((b) => [new Date(b.start).getTime(), new Date(b.end).getTime()]).sort((a, b) => a[0] - b[0]);
-  const t = (d: Date) => d.toLocaleTimeString("en-US", { hour: "numeric", minute: d.getMinutes() ? "2-digit" : undefined }).replace(" ", "").toLowerCase();
-  const out: string[] = [];
-  for (let i = 0; i < 7; i++) {
-    const day = new Date(now); day.setDate(day.getDate() + i);
-    const open = new Date(day), close = new Date(day); open.setHours(9, 0, 0, 0); close.setHours(21, 0, 0, 0);
-    let cur = Math.max(open.getTime(), Math.ceil(now.getTime() / 9e5) * 9e5);   // from the next quarter hour
-    const end = close.getTime(), gaps: string[] = [];
-    const add = (a: number, b: number) => { if (b - a >= 45 * 6e4) gaps.push(`${t(new Date(a))}–${t(new Date(b))}`); };
-    for (const [s, e] of spans) { if (e <= cur || s >= end) continue; add(cur, Math.min(s, end)); cur = Math.max(cur, e); }
-    if (cur < end) add(cur, end);
-    if (gaps.length) out.push(`${day.toLocaleDateString("en-US", { weekday: "short" })} ${gaps.join(", ")}`);
-  }
-  return out.join("; ");
-}
 
 function ConnectStep({ name, onDone }: { name: string; onDone: (p: Profile, linkedin: string, headline: string | null) => void }) {
   const [googleOk, setGoogleOk] = React.useState<boolean | null>(null);
@@ -323,8 +303,8 @@ function ConnectStep({ name, onDone }: { name: string; onDone: (p: Profile, link
     const list = [linkedin, links.x && (links.x.includes("/") ? links.x : `https://x.com/${links.x.replace(/^@/, "")}`),
       links.github && (links.github.includes("/") ? links.github : `https://github.com/${links.github}`), links.site].filter(Boolean);
     const p = await api("/onboard/suggest", "spectator", "POST", { name, headline, links: list }).catch(() => ({ offers: [], openTo: ["coffee"], facts: [] }));
-    const facts: Fact[] = [...(p.facts ?? []).filter((f: Fact) => f.topic !== "availability"), ...(gcal?.busy ? [{ topic: "availability", text: freeWindows(gcal.busy) ? `Free ${freeWindows(gcal.busy)}` : "No free time in the next 7 days" }] : [])];
-    onDone({ offers: p.offers ?? [], openTo: p.openTo?.length ? p.openTo : ["coffee"], facts, hide: ["contact", "grades"] }, linkedin, headline);
+    const facts: Fact[] = [...(p.facts ?? []).filter((f: Fact) => f.topic !== "availability"), ];
+    onDone({ offers: p.offers ?? [], openTo: p.openTo?.length ? p.openTo : ["coffee"], facts, hide: ["contact", "grades"], ...(gcal?.busy ? { busy: gcal.busy } : {}) }, linkedin, headline);
   };
 
   if (building) return (
@@ -342,9 +322,9 @@ function ConnectStep({ name, onDone }: { name: string; onDone: (p: Profile, link
         {gcal ? (
           <div className="sticker face-lime crooked flex items-center gap-4 self-start px-5 py-4" style={tilt(-1.5)}>
             <Calendar className="pixel-icon size-8 shrink-0" />
-            <span className="flex flex-col">
-              <span className="text-lg font-extrabold">Calendar connected</span>
-              {gcal.email && <span className="text-base font-medium">{gcal.email}</span>}
+            <span className="flex flex-col gap-2">
+              {gcal.email && <span className="text-lg font-extrabold">{gcal.email}</span>}
+              <span className="text-base font-medium">Calendar connected</span>
             </span>
           </div>
         ) : (
