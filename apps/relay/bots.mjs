@@ -40,6 +40,33 @@ export function scoreFit(ask, otherCard, shared) {
   return { fit, fitReason, hits };
 }
 
+/**
+ * The asker's Bot judging fit with a model, for asks in any wording. Keyword overlap only rewards an ask that
+ * happens to share words with a card, so it is the fallback, not the judge, whenever a model is configured.
+ * It sees exactly what the asker's Bot learned: the public card and what was said. Withheld lines are not in `shared`.
+ */
+export async function judgeFit(key, model, ask, otherCard, shared, base = process.env.XAI_BASE_URL ?? "https://api.x.ai/v1") {
+  const prompt = [
+    `A student asked their Bot: "${ask.text}" (kind of ask: ${ask.kind}).`,
+    `A candidate's public card says they can help with: ${JSON.stringify(otherCard.offers)}.`,
+    `In an anonymous conversation the candidate's Bot said: ${JSON.stringify(shared.map((f) => f.text))}.`,
+    `Score how well this candidate fits the ask from 0 to 10. 7 or more means worth introducing; 4 to 6 is a partial fit; 0 to 3 is unrelated.`,
+    `Judge only from what is listed. A related skill or experience counts even when the wording differs. Nothing unlisted can raise the score.`,
+    `Reply with JSON only: {"fit": integer, "reason": "one short line, no names, under 90 characters"}`,
+  ].join(" ");
+  const r = await fetch(`${base}/chat/completions`, {
+    method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+    body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" } }),
+    signal: AbortSignal.timeout(15000),
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(`model said ${r.status}`);
+  const out = JSON.parse(String(data.choices?.[0]?.message?.content ?? "").replace(/^```(json)?|```$/g, "").trim());
+  const fit = Math.round(Number(out.fit));
+  if (!Number.isFinite(fit)) throw new Error("no score");
+  return { fit: Math.max(0, Math.min(10, fit)), fitReason: String(out.reason ?? "").trim().slice(0, 120) || "No reason given" };
+}
+
 /** Deterministic Bots: no key, no network, same lines every run. */
 export const scripted = {
   name: "scripted",

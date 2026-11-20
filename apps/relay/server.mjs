@@ -1,7 +1,7 @@
 // Grokmate relay: network state, the bus between Bots, and the redacted event stream. See PROTOCOL.md.
 import http from "node:http";
 import { inferAsk, scout, finalize, promote, karmaFor } from "./rules.mjs";
-import { scripted, webhookDriver, xaiDriver, botHooks, resolveBotTurn, enforce, scoreFit, answerFor } from "./bots.mjs";
+import { scripted, webhookDriver, xaiDriver, botHooks, resolveBotTurn, enforce, scoreFit, answerFor, judgeFit, TOPICS_FOR } from "./bots.mjs";
 import { YOU, PERSONAS, SPOTS } from "./seed.mjs";
 import { interview, sanitize, whoIs, lookFromSelfie, suggestProfile, TOPICS } from "./onboard.mjs";
 import * as google from "./google.mjs";
@@ -140,13 +140,19 @@ export function createRelay() {
       if (reply.withheld) { conv.history.push({ from: role, withheld: reply.withheld }); emit({ type: "conv.withheld", askId: ask.id, convId: conv.id, from: role, topic: reply.withheld }); }
       else {
         conv.history.push({ from: role, text: reply.text });
-        if (role === "offerer") conv.shared.push(reply.fact ?? { topic: "said", text: reply.text });
+        // a free-form answer still belongs to the topic it was asked about
+        if (role === "offerer") conv.shared.push(reply.fact ?? { topic: (TOPICS_FOR[ask.kind] ?? TOPICS_FOR.coffee)[(step - 1) / 2 - 1] ?? "said", text: reply.text });
         emit({ type: "conv.message", askId: ask.id, convId: conv.id, from: role, text: reply.text, askText: !!reply.askText });
       }
     }
     await sleep(PACE); if (gone()) return null;
     // verdicts are the relay's own rules, whoever drove the conversation, so they stay auditable
-    const a = scripted.turn({ role: "asker", step: "verdict", ask, me: side(conv.askerId), other: { card: S.cards.get(conv.offererId) }, shared: conv.shared }).verdict;
+    let a = scripted.turn({ role: "asker", step: "verdict", ask, me: side(conv.askerId), other: { card: S.cards.get(conv.offererId) }, shared: conv.shared }).verdict;
+    if (process.env.XAI_API_KEY && process.env.XAI_MODEL) {
+      // with a model configured, it judges fit so an ask in any wording is scored on meaning; the keyword score is the fallback
+      a = await judgeFit(process.env.XAI_API_KEY, process.env.XAI_MODEL, ask, S.cards.get(conv.offererId), conv.shared).catch(() => a);
+      if (gone()) return null;
+    }
     const o = scripted.turn({ role: "offerer", step: "verdict", ask, me: side(conv.offererId), other: { card: S.cards.get(conv.askerId) }, shared: conv.shared }).verdict;
     conv.status = "done"; conv.verdict = { convId: conv.id, ...a, ...o };
     emit({ type: "conv.verdict", askId: ask.id, convId: conv.id, ...a, ...o });
