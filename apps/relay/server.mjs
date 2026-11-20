@@ -439,7 +439,7 @@ export function createRelay() {
       return json(res, 200, { ok: true });
     }
     if (parts[0] === "bot" && parts[2] !== "turn") {
-      if (process.env.BOT_KEY && req.headers.authorization !== `Bearer ${process.env.BOT_KEY}`) throw Object.assign(new Error("Bad bot key"), { code: 401 });
+      // same trust as the web app's own calls (?as=): BOT_KEY guards only the turn-reply path below
       const me = member();
       if (M === "GET" && parts[1] === "cards") return json(res, 200, { cards: botCards(me, url.searchParams.get("kind")) });
       if (M === "GET" && parts[1] === "inbox") return json(res, 200, inbox(me));

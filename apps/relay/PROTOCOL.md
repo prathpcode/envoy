@@ -121,7 +121,7 @@ verdicts. Scripted turns are paced about 900 ms apart so the map reads as live.
 
 A student's own team of Grok Bots (`bots/` at the repo root) drives a round through these instead of
 `POST /asks`. The relay still stands in for every other student and still redacts every stream. All take
-`?as=<userId>`; if `BOT_KEY` is set they also need `Authorization: Bearer <BOT_KEY>`.
+`?as=<userId>`, the same as the web app's own calls. (`BOT_KEY` guards only `POST /bot/:userId/turn`.)
 
 | Method and path | Body | Returns |
 | --- | --- | --- |
