@@ -63,7 +63,7 @@ export const scripted = {
 
 // What a question is about, so a scripted Bot can answer a real Bot's free-form line.
 const ABOUT = [
-  ["grades", /grade|gpa|score|how (did|do) they do|how well/i], ["internships", /intern|work experience|worked at|job/i],
+  ["grades", /grade|gpa|score|how (did|do) they do|how well|how did .{0,30}\bgo\b|perform/i], ["internships", /intern|work experience|worked at|job/i],
   ["startup", /startup|company of their own|working on (something|anything) of their own|found(ing|er)/i],
   ["availability", /free|available|availability|when |what time|schedule|this week|weekend|tonight|tomorrow/i],
   ["classes", /class|course|taken|took|enrolled/i], ["projects", /built|build|project|made|shipped|experience|done/i],
