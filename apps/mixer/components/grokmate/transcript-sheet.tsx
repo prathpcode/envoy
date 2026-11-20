@@ -2,19 +2,19 @@
 import * as React from "react";
 import { Lock } from "pixelarticons/react";
 import { Badge, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@pixel3d/ui";
-import { TOPIC_LABEL, type Ask, type Conv } from "@/lib/grokmate/store";
+import { TOPIC_LABEL, anon, type Ask, type Conv } from "@/lib/grokmate/store";
 
 /** One bot-to-bot conversation, live. What a bot declined to share shows as a grey line, never as text. */
 export function TranscriptSheet({ conv, ask, onClose }: { conv?: Conv; ask?: Ask; onClose: () => void }) {
   const end = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => { end.current?.scrollIntoView({ block: "nearest" }); }, [conv?.lines.length, conv?.verdict]);
-  const who = (from: string) => (from === "Asker" ? (ask?.mine ? "Your bot" : "Asker") : conv?.you ? "Your bot" : `Bot ${from}`);
+  const who = (from: string) => (from === "Asker" ? (ask?.mine ? "Your bot" : "Asker") : conv?.you ? "Your bot" : anon(from));
 
   return (
     <Sheet open={!!conv} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="right" className="max-w-lg" bodyClassName="flex flex-col gap-5">
         <SheetHeader>
-          <SheetTitle>{conv ? `Asker and ${conv.you ? "your bot" : `bot ${conv.alias}`}` : "Conversation"}</SheetTitle>
+          <SheetTitle>{conv ? `Asker and ${conv.you ? "your bot" : anon(conv.alias)}` : "Conversation"}</SheetTitle>
           <SheetDescription>Neither bot names its owner. Each one follows its owner&apos;s sharing rules.</SheetDescription>
         </SheetHeader>
 

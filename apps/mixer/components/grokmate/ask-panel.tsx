@@ -3,8 +3,8 @@ import * as React from "react";
 import { Lock, Calendar } from "pixelarticons/react";
 import { Badge, Button, Card, Stepper, Textarea, toast } from "@pixel3d/ui";
 import { CharAvatar } from "@/components/char-avatar";
-import { api, RELAY } from "@/lib/grokmate/use-grokmate";
-import { KIND_LABEL, type Ask, type Conv, type Match, type Meeting, type State } from "@/lib/grokmate/store";
+import { api } from "@/lib/grokmate/use-grokmate";
+import { KIND_LABEL, anon, type Ask, type Conv, type Match, type Meeting, type State } from "@/lib/grokmate/store";
 
 const QUICK = [
   "Find me an iOS teammate for this weekend's hackathon",
@@ -130,7 +130,7 @@ export function AskPanel({ as, state, online, onOpenConv, onFocusAsk, onNeedJoin
               </div>
             </div>
             <BriefLines match={m} />
-            {meeting && <MeetingRow as={as} meeting={meeting} role={asker ? "asker" : "offerer"} />}
+            {meeting && <MeetingRow as={as} meeting={meeting} match={m} with={other?.name} role={asker ? "asker" : "offerer"} />}
           </div>
         );
       })}
@@ -165,9 +165,10 @@ function Round({ ask, convs, title, onOpenConv, onFocus }: { ask: Ask; convs: Co
           return (
             <li key={c.convId}>
               <button type="button" onClick={() => onOpenConv(c.convId)} className="sticker sticker-flat face-paper flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left">
-                <span className={`flex size-9 shrink-0 items-center justify-center text-lg font-extrabold ${v ? (v.willing && v.fit >= 7 ? "bg-lime text-ink" : "bg-disabled-face text-ink-soft") : "bg-sky text-ink"}`}>{c.you ? "You" : c.alias}</span>
+                <span className={`size-3 shrink-0 ${v ? (v.willing && v.fit >= 7 ? "bg-lime" : "bg-disabled-face") : "bg-sky"}`} aria-hidden />
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-base font-bold text-ink">
+                  <span className="text-sm font-extrabold text-ink">{c.you ? "You" : anon(c.alias)}</span>
+                  <span className="truncate text-base font-bold text-ink-soft">
                     {!c.started ? "Waiting to start" : !v ? "Talking…" : v.willing ? v.fitReason : v.willingReason}
                   </span>
                   {held > 0 && <span className="flex items-center gap-1 text-sm font-bold text-ink-soft"><Lock className="pixel-icon size-4" /> {held} withheld</span>}
@@ -207,7 +208,7 @@ function BriefLines({ match }: { match: Match }) {
 function Proposal({ as, match, asker, mineToAnswer }: { as: string; match: Match; asker: boolean; mineToAnswer: boolean }) {
   return (
     <div className="flex flex-col gap-3 border-t-4 border-dotted border-ink/20 pt-4">
-      <span className="text-xl font-extrabold text-ink">{asker ? `Your bot picked ${match.alias}` : "You look like a fit"}</span>
+      <span className="text-xl font-extrabold text-ink">{asker ? `Your bot picked ${anon(match.alias)}` : "You look like a fit"}</span>
       <BriefLines match={match} />
       {mineToAnswer ? (
         <div className="flex flex-wrap items-center gap-4 pt-1">
@@ -216,13 +217,23 @@ function Proposal({ as, match, asker, mineToAnswer }: { as: string; match: Match
           <span className="basis-full text-sm font-bold text-ink-soft">Names stay hidden until both of you say yes. Saying no costs nothing.</span>
         </div>
       ) : (
-        <p className="text-base font-bold text-ink-soft">{asker ? `Waiting for ${match.alias} to say yes. If they don't, the next match moves up.` : "Waiting for the asker."}</p>
+        <p className="text-base font-bold text-ink-soft">{asker ? `Waiting for ${anon(match.alias)} to say yes. If they don't, the next match moves up.` : "Waiting for the asker."}</p>
       )}
     </div>
   );
 }
 
-function MeetingRow({ as, meeting, role }: { as: string; meeting: Meeting; role: "asker" | "offerer" }) {
+/** A Google Calendar "add event" link for the booked slot: 30 minutes, matching the relay's .ics invite. */
+function googleCalendarUrl(meeting: Meeting, match: Match, withName?: string) {
+  const z = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+  const start = new Date(meeting.slot), end = new Date(start.getTime() + 30 * 60000);
+  const details = [match.brief?.why, match.brief?.talkAbout?.length ? `Talk about: ${match.brief.talkAbout.join(", ")}` : ""].filter(Boolean).join("\n\n");
+  const q = new URLSearchParams({ action: "TEMPLATE", text: withName ? `Grokmate: meet ${withName}` : "Grokmate: meet your match", dates: `${z(start)}/${z(end)}`, details });
+  if (meeting.place) q.set("location", meeting.place.name);
+  return `https://calendar.google.com/calendar/render?${q}`;
+}
+
+function MeetingRow({ as, meeting, match, with: withName, role }: { as: string; meeting: Meeting; match: Match; with?: string; role: "asker" | "offerer" }) {
   const [helpful, setHelpful] = React.useState(true);
   const [selfie, setSelfie] = React.useState(false);
   const confirm = (happened: boolean) => call(api(`/meetings/${meeting.meetingId}/confirm`, as, "POST", { happened, helpful: role === "asker" ? happened && helpful : undefined }));
@@ -239,7 +250,7 @@ function MeetingRow({ as, meeting, role }: { as: string; meeting: Meeting; role:
       {meeting.status === "scheduled" && (
         <div className="flex flex-wrap items-center gap-4">
           <Badge tone="lime" tilt={-2}>Invite sent</Badge>
-          <Button variant="secondary" asChild><a href={`${RELAY}/meetings/${meeting.meetingId}/invite.ics?as=${encodeURIComponent(as)}`}>Add to calendar</a></Button>
+          <Button variant="secondary" asChild><a href={googleCalendarUrl(meeting, match, withName)} target="_blank" rel="noopener noreferrer">Add to Google Calendar</a></Button>
         </div>
       )}
       {meeting.status === "asked" && (

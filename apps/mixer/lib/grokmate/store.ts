@@ -6,6 +6,8 @@ export type Look = { skin?: number; hair?: number; style?: number; top?: number;
 export type User = { id: string; name: string; place: string; kind: "you" | "real" | "persona"; look?: Look };
 export type Line = { from: string; text?: string; withheld?: string };
 export type Verdict = { fit: number; fitReason: string; willing: boolean; willingReason: string };
+/** The relay's alias is a letter (A, B, C…); people see it as "Anonymous student 1, 2, 3…". */
+export const anon = (alias: string) => /^[A-Z]$/.test(alias) ? `Anonymous student ${alias.charCodeAt(0) - 64}` : alias;
 export type Conv = { convId: string; askId: string; alias: string; you?: boolean; lines: Line[]; verdict?: Verdict; started: boolean };
 export type Brief = { why: string; talkAbout: string[] };
 export type Person = { id: string; name: string };

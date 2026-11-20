@@ -44,7 +44,7 @@ function LiveLine() {
   );
 }
 
-export function Hero({ bots, onJoin, onRoster }: { bots: Bot[]; onJoin: () => void; onRoster: () => void }) {
+export function Hero({ bots, onJoin, onRoster }: { bots: Pick<Bot, "id" | "name">[]; onJoin: () => void; onRoster: () => void }) {
   const faces = bots.slice(0, 3);
 
   return (
@@ -78,7 +78,7 @@ export function Hero({ bots, onJoin, onRoster }: { bots: Bot[]; onJoin: () => vo
                 </span>
               ))}
             </span>
-            Who&apos;s here · {bots.length}
+            {bots.length} on campus
           </Button>
         </div>
       </Card>

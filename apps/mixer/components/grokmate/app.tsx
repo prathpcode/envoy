@@ -9,7 +9,6 @@ import { TranscriptSheet } from "./transcript-sheet";
 import { KarmaSheet, PersonSheet, DemoDesk } from "./sheets";
 import { Onboarding } from "./onboarding";
 import { Hero } from "./hero";
-import { BOTS } from "@/lib/sample";
 import { RELAY, api } from "@/lib/grokmate/use-grokmate";
 
 const ME = "grokmate:me";
@@ -82,7 +81,7 @@ export function GrokmateApp() {
       <iframe ref={frame} src="/map/iso.html?embed=1&s=0.62&lat=37.4268&lon=-122.1690&ox=480" title="The Stanford campus with everyone's bots on it" className="map-frame" />
 
       <div className="hud pointer-events-none absolute inset-0">
-        {guest ? <Hero bots={BOTS} onJoin={() => setJoinOpen(true)} onRoster={() => { refreshBoard(); setKarmaOpen(true); }} /> : (
+        {guest ? <Hero bots={Object.values(state.users)}onJoin={() => setJoinOpen(true)} onRoster={() => { refreshBoard(); setKarmaOpen(true); }} /> : (
         <section className="absolute left-4 top-6 flex max-h-[calc(100dvh-3rem)] w-[calc(100%-2rem)] max-w-[460px] flex-col md:left-8 md:top-8">
           <span className="sticker face-ink crooked relative z-10 -mb-5 ml-6 self-start px-5 py-2 text-xl font-extrabold tracking-tight" style={tilt(-2.5)}>
             Grokmate

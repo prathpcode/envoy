@@ -18,7 +18,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={bricolage.variable} suppressHydrationWarning>
-      <body className="min-h-dvh bg-lid text-on-lid antialiased">
+      {/* Browser extensions (e.g. ColorZilla's cz-shortcut-listen) add attributes to <body> before hydration. */}
+      <body className="min-h-dvh bg-lid text-on-lid antialiased" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>
