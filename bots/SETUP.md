@@ -17,20 +17,20 @@ repo; any tunnel that forwards to port 8787 will do.)
 
 ## 2. Create each Bot and give it its skill
 
-For each file in this folder (`manager.md`, `onboarding.md`, `representative.md`, `scheduler.md`, `follow-up.md`):
+For each file in this folder (`manager.md`, `onboarder.md`, `representative.md`, `scheduler.md`, `follow-up.md`):
 
 1. In Grok Bot, create a new Bot with the name at the top of the file. Make the Manager your primary Bot.
 2. Paste the file's text into the chat, with `RELAY_URL` replaced by your address.
 3. Ask it: "Save this as a skill called <name> and use it every time."
 4. If it asks to approve calls to the relay, choose **Always allow**.
 
-Then run the Onboarding Bot once. It writes `~/grokmate/config.json` on the Bots' shared computer, which is how the
+Then run the Onboarder once. It writes `~/grokmate/config.json` on the Bots' shared computer, which is how the
 other four know who you are.
 
 ## 3. Try it
 
 Tell the Manager: "I need a study partner for Thursday's linear algebra exam." Watch it on the map at
-`http://localhost:3001/?as=<your id>` (the Onboarding Bot tells you your id).
+`http://localhost:3001/?as=<your id>` (the Onboarder tells you your id).
 
 ## 4. Publish the templates
 

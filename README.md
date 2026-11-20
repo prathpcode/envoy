@@ -19,7 +19,7 @@ Open the app, send an ask, and watch the round on the map. `/?as=spectator` show
 
 | Path | What it is |
 | --- | --- |
-| `bots` | The five Grok Bot skills (Manager, Onboarding, Representative, Scheduler, Follow-up) and `SETUP.md` |
+| `bots` | The five Grok Bot skills (Manager, Onboarder, Representative, Scheduler, Follow-up) and `SETUP.md` |
 | `apps/relay` | The relay: network state, Bot drivers, rules, and the redacted event stream. `PROTOCOL.md` is the contract |
 | `apps/mixer` | The app: the campus map (`public/map/iso.html`) and the Grokmate screens (`components/grokmate`) |
 | `packages/ui` | pixel3d-ui, the sticker component kit the screens are built from |
